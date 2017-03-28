@@ -5,16 +5,11 @@
 
 using namespace std;
 
-typedef AnyPoint<int,2> Point;
-typedef AnyPoint<double,2> point2;
-typedef AnyPoint<double,3> point3;
-typedef AnyPoint<double,4> point4;
-
 template<class T, int n = 2> class AnyPoint {
 	vector<T> a_;
 public:
 	AnyPoint(int = 0, int = 0, int = 0, int = 0);
-	~point2();
+	~AnyPoint();
 	
 	T& operator[](int);
 	
@@ -25,7 +20,12 @@ public:
 	bool operator==(AnyPoint b);
 	
 	AnyPoint operator-();
-}
+};
+
+typedef AnyPoint<int,2> Point;
+typedef AnyPoint<double,2> point2;
+typedef AnyPoint<double,3> point3;
+typedef AnyPoint<double,4> point4;
 
 template<class T, int n> AnyPoint<T, n> operator*(AnyPoint<T, n>, double);
 
