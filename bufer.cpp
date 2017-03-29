@@ -80,6 +80,7 @@ Brush Bufer::brushSet(Color clr) {
 	return a1;
 }
 
+<<<<<<< HEAD
 void Bufer::textOut(Point x, string str, TextStyle stl) {
 	
 	TextOut(hdc_, x[0], x[1], str.c_str(), strlen(str.c_str())); 
@@ -91,6 +92,11 @@ const wchar_t *GetWC(const char *c) {
 	mbstowcs (wc, c, cSize);
 
 	return wc;
+=======
+void Bufer::textOut(int x, int y, string str, TextStyle stl) {
+	
+	TextOut(hdc_, x, y, (LPCWSTR)str.c_str(), strlen(str.c_str())); 
+>>>>>>> a21af39790a395ed1748100cfa07fe8ec1306ca1
 }
 
 void Bufer::textStyle(Color c, int size, string name) {
