@@ -3,6 +3,9 @@
 namespace gwapi{
 
 Bufer::Bufer(int x, int y) : sizex(x), sizey(y) {
+	VOID *pvBits;
+
+	/* —труктура дл€ того, чтобы св€зать картинку с массивом. */
 	BITMAPINFO bmi;
 	ZeroMemory(&bmi, sizeof(BITMAPINFO));
 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER); 
@@ -12,8 +15,6 @@ Bufer::Bufer(int x, int y) : sizex(x), sizey(y) {
 	bmi.bmiHeader.biBitCount = 32;
 	bmi.bmiHeader.biCompression = BI_RGB;
 	bmi.bmiHeader.biSizeImage = x * y * 4;
-	
-	VOID *pvBits;
 	
 	hdc_ = CreateCompatibleDC(NULL);
 	hbmp_ = CreateDIBSection(hdc_, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
@@ -32,8 +33,8 @@ void Bufer::drawTo(Bufer a, int x, int y, int width, int height) {
 	x = min(a.sizex, x);
 	y = min(a.sizey, y);
 	
-	if (width = 0) width = a.sizex;	
-	if (height = 0) height = a.sizey;
+	if (width == 0) width = a.sizex;	
+	if (height == 0) height = a.sizey;
 	
 	width = min(x + width, a.sizex) - width;
 	height = min(y + width, a.sizey) - height;
@@ -41,14 +42,19 @@ void Bufer::drawTo(Bufer a, int x, int y, int width, int height) {
 	BitBlt(a.hdc_, x, y, width, height, hdc_, 0, 0, SRCCOPY);
 }
 
-void Bufer::drawAlphaTo(Bufer) {
-	//@ јлгоритм, который учитывает прозрачность двух слоев. @//
-}
-
-void Bufer::clear(Color cls = White) {
+void Bufer::drawAlphaTo(Bufer a, int x, int y, int width, int height) {
+	// TODO протестировать как работает
 	for (int x = 0; x<sizex; x++) {
 		for (int y = 0; y<sizey; y++) {
-			(*this)[] = cls.clrref;
+			a[Point(x, y)] = overlay(a[Point(x, y)], operator[](Point(x,y))).clrref;
+		}
+	}
+}
+
+void Bufer::clear(Color cls) {
+	for (int x = 0; x<sizex; x++) {
+		for (int y = 0; y<sizey; y++) {
+			operator[](Point(x, y)) = cls.clrref;
 		}
 	}
 }
@@ -59,41 +65,55 @@ Pen Bufer::penSet(Color clr, int thick) {
 	pen_.color = clr;
 	pen_.thickness = thick;
 	
-	SelectObject(hdc_, CreatePen(PS_SOLID, thick, clr.clrref));
+	SelectObject(hdc_, CreatePen(PS_SOLID, thick, toWindowsColor(clr)));
 	
 	return a1;
 }
 
 Brush Bufer::brushSet(Color clr) {
+	Brush a1 = brush_;
+	
 	brush_ = clr;
+	
+	SelectObject(hdc_, CreateSolidBrush(toWindowsColor(clr)));
+	
+	return a1;
 }
 
-void Bufer::textOut(int, int, string, OutStyle = LeftUp) {
+void Bufer::textOut(int, int, string, TextStyle) {
 	
 }
 
-void Bufer::textStyle(Color, int = 14, string = "Consolas") {
+void Bufer::textStyle(Color, int, string) {
+	
 }
 
-void Bufer::pixelDraw(Point, Color = Black) {
+void Bufer::pixelDraw(Point x, Color c) {
+	operator[](x) = c.clrref;
 }
 
-Color Bufer::pixelGet(Point) {
+Color Bufer::pixelGet(Point a) {
+	return operator[](a);
 }
 
 void Bufer::rectDraw(Point, Point) {
+
 }
 
-void Bufer::circleDraw(point2, int) {
+void Bufer::circleDraw(Point, int) {
+
 }
 
 void Bufer::lineDraw(Point, Point) {
+
 }
 
-void Bufer::bezierDraw(vector<Point>, BezierStyle = Default) {
+void Bufer::bezierDraw(vector<Point>, BezierStyle) {
+
 }
 
-UINT32& Bufer::operator[](Point) {
+inline UINT32& Bufer::operator[](Point a) {
+	return mas_[a[0] + sizey*a[1]];
 }
 
 }
