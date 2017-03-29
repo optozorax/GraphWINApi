@@ -41,7 +41,7 @@ public:
 	Pen penSet(Color, int = 1);
 	Brush brushSet(Color);
 	
-	void textOut(int, int, string, TextStyle = LeftUp);
+	void textOut(Point, string, TextStyle = LeftUp);
 	void textStyle(Color, int = 14, string = "Consolas");
 	
 	/* Реализация на основе примитивов виндоус. */
