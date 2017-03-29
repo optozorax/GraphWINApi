@@ -80,9 +80,9 @@ Brush Bufer::brushSet(Color clr) {
 	return a1;
 }
 
-void Bufer::textOut(int, int, string str, TextStyle stl) {
+void Bufer::textOut(int x, int y, string str, TextStyle stl) {
 	
-	TextOut(hdcMem, x, y, str.c_str(), strlen(str.c_str())); 
+	TextOut(hdc_, x, y, (LPCWSTR)str.c_str(), strlen(str.c_str())); 
 }
 
 void Bufer::textStyle(Color c, int size, string name) {

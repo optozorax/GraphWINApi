@@ -75,16 +75,13 @@ bool operator==(AnyPoint<T, n> a, AnyPoint<T, n> b) {
 }
 
 template<class T, int n>
-ostream & operator<<(ostream &cout, AnyPoint<T, n> a)
-{
+ostream & operator<<(ostream &cout, AnyPoint<T, n> a) {
+	//TODO протестировать
 	cout << "(";
-	for (int i = 0; i < n; i++) {
-		cout << a[i];
-		if (i == (n-1)) 
-			cout << ")"; 
-		else 
-			cout << ", ";
+	for (int i = 0; i < n-1; i++) {
+		cout << a[i] << ", ";
 	}
+	cout << a[i] << ")";
 
 	return cout;
 }
