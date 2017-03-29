@@ -33,7 +33,7 @@ void Bufer::drawTo(Bufer a, int x, int y, int width, int height) {
 	y = min(a.sizey, y);
 	
 	if (width = 0) width = a.sizex;	
-	if (heigth = 0) height = a.sizey;
+	if (height = 0) height = a.sizey;
 	
 	width = min(x + width, a.sizex) - width;
 	height = min(y + width, a.sizey) - height;
@@ -59,7 +59,7 @@ Pen Bufer::penSet(Color clr, int thick) {
 	pen_.color = clr;
 	pen_.thickness = thick;
 	
-	SelectObject(hdc_, CreatePen(PS_SOLID, thick, clr.clrref))
+	SelectObject(hdc_, CreatePen(PS_SOLID, thick, clr.clrref));
 	
 	return a1;
 }
