@@ -31,6 +31,7 @@ class Bufer {
 	Brush brush_;
 public:
 	Bufer(int = 1000, int = 1000);
+	Bufer(HDC);
 	~Bufer();
 	
 	void drawTo(Bufer, int x = 0, int y = 0, int width = 0, int height = 0);

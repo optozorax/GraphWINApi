@@ -23,6 +23,14 @@ Bufer::Bufer(int x, int y) : sizex(x), sizey(y) {
 	SelectObject(hdc_, hbmp_);
 }
 
+Bufer::Bufer(HDC hdc) {
+	hdc_ = hdc;
+	hbmp_ = NULL;
+	mas_ = NULL;
+	sizex = 1000;
+	sizey = 1000;
+}
+
 Bufer::~Bufer() {
 	DeleteObject(hbmp_);
 	DeleteDC(hdc_);
@@ -36,8 +44,8 @@ void Bufer::drawTo(Bufer a, int x, int y, int width, int height) {
 	if (width == 0) width = a.sizex;	
 	if (height == 0) height = a.sizey;
 	
-	width = min(x + width, a.sizex) - width;
-	height = min(y + width, a.sizey) - height;
+	//width = min(x + width, a.sizex) - width;
+	//height = min(y + height, a.sizey) - height;
 	
 	BitBlt(a.hdc_, x, y, width, height, hdc_, 0, 0, SRCCOPY);
 }
@@ -80,23 +88,9 @@ Brush Bufer::brushSet(Color clr) {
 	return a1;
 }
 
-<<<<<<< HEAD
 void Bufer::textOut(Point x, string str, TextStyle stl) {
-	
-	TextOut(hdc_, x[0], x[1], str.c_str(), strlen(str.c_str())); 
-}
-
-const wchar_t *GetWC(const char *c) {
-	const size_t cSize = strlen(c)+1;
-	wchar_t* wc = new wchar_t[cSize];
-	mbstowcs (wc, c, cSize);
-
-	return wc;
-=======
-void Bufer::textOut(int x, int y, string str, TextStyle stl) {
-	
-	TextOut(hdc_, x, y, (LPCWSTR)str.c_str(), strlen(str.c_str())); 
->>>>>>> a21af39790a395ed1748100cfa07fe8ec1306ca1
+	// TODO сделать для разных стилей
+	TextOut(hdc_, x[0], x[1], (LPCSTR)str.c_str(), strlen(str.c_str())); 
 }
 
 void Bufer::textStyle(Color c, int size, string name) {
@@ -189,3 +183,22 @@ void gwapi::Bufer::lineDraw(point2, point2) {
 }
 
 }
+
+#define __BUFERTEST
+#ifdef __BUFERTEST
+using namespace gwapi;
+#include <windows.h>
+#include <iostream>
+#include <stdlib.h>
+int main() {
+	Bufer a(300,300);
+	a.clear();
+	a.penSet(rgb(128,0,128), 3);
+	a.lineDraw(Point(100,100), Point(200,200));
+	a.lineDraw(Point(100,200), Point(200,100));
+	a.circleDraw(Point(150,150), 50);
+	a.drawTo(GetDC(GetConsoleWindow()));
+	system("pause");
+	return 0;
+}
+#endif
