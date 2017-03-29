@@ -15,6 +15,7 @@ typedef union Color__ {
 
 	Color__() {};
 	Color__(DWORD a) {clrref = a;}
+	Color__(UINT32 a) {clrref = a;}
 } Color;
 
 const Color White = {0xFFFFFFFF};
@@ -27,7 +28,7 @@ Color gray(const double, const bool cycle = false);
 Color rainbow(const double, const bool cycle = false);
 Color gradient(const double, const bool cycle, vector<Color>);
 
-Color overlay(const Color&, const Color&);
+Color overlay(Color, Color);
 
 COLORREF toWindowsColor(const Color&);
 
