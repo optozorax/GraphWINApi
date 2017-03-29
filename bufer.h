@@ -38,7 +38,7 @@ public:
 	
 	void clear(Color = White);
 	
-	Pen penSet(Color, int);
+	Pen penSet(Color, int = 1);
 	Brush brushSet(Color);
 	
 	void textOut(int, int, string, TextStyle = LeftUp);

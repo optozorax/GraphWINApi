@@ -65,7 +65,7 @@ gwapi::Color gwapi::gradient(const double a, const bool cycle, const vector<Colo
 	return rgb(r,g,b);
 };
 
-gwapi::Color gwapi::overlay(const Color &a, const Color &b) {
+gwapi::Color gwapi::overlay(Color a, Color b) {
 	/* Первый пиксель находится над вторым. */
 	Color c;
 	
