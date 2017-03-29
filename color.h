@@ -6,7 +6,7 @@
 #include <windows.h>
 
 using namespace std;
-/*test*/
+
 namespace gwapi{
 
 typedef union Color__ {
