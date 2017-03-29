@@ -116,4 +116,25 @@ inline UINT32& Bufer::operator[](Point a) {
 	return mas_[a[0] + sizey*a[1]];
 }
 
+void gwapi::Bufer::pixelDraw(point2, Color) {
+
+}
+
+Color gwapi::Bufer::pixelGet(point2) {
+
+	return Color();
+}
+
+void gwapi::Bufer::rectDraw(point2, point2) {
+
+}
+
+void gwapi::Bufer::circleDraw(point2, double) {
+
+}
+
+void gwapi::Bufer::lineDraw(point2, point2) {
+
+}
+
 }
