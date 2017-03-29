@@ -80,12 +80,32 @@ Brush Bufer::brushSet(Color clr) {
 	return a1;
 }
 
-void Bufer::textOut(int, int, string, TextStyle) {
+void Bufer::textOut(int, int, string str, TextStyle stl) {
 	
+	TextOut(hdcMem, x, y, str.c_str(), strlen(str.c_str())); 
 }
 
-void Bufer::textStyle(Color, int, string) {
-	
+void Bufer::textStyle(Color c, int size, string name) {
+	// TODO протестировать
+	LOGFONT font;
+	HFONT hfont;
+	font.lfHeight 			= -size; /* Высота шрифта. */ 
+	font.lfWidth 			= 0; /* Ширина символов в шрифте. */
+	font.lfEscapement 		= 0; /* Угол наклона относительно горизонта. */ 
+	font.lfOrientation 		= 0; /* Угол между основной линией каждого символа и осью X устройства. */ 
+	font.lfWeight 			= 0; /* Толщина шрифта в диапазоне от 0 до 1000. */ 
+	font.lfItalic 			= FALSE; /* Курсивный шрифт. */
+	font.lfUnderline 		= FALSE; /* Подчеркнутый шрифт. */
+	font.lfStrikeOut 		= FALSE; /* Зачеркнутый шрифт. */
+	font.lfCharSet 			= RUSSIAN_CHARSET; /* Набор символов. */
+	font.lfOutPrecision 		= 0; /* Точность вывода. */
+	font.lfClipPrecision 		= CLIP_DEFAULT_PRECIS; /* Точность отсечения. */
+	font.lfQuality 			= PROOF_QUALITY; /* Качество вывода. */
+	font.lfPitchAndFamily 		= 0; /* Ширина символов и семейство шрифта. */
+	strcpy(font.lfFaceName,		name.c_str()); /* Название шрифта. */
+	/* Применение шрифта к дескриптору окна. */
+	hfont = ::CreateFontIndirect(&font);
+	SelectObject(hdc_, hfont);
 }
 
 void Bufer::pixelDraw(Point x, Color c) {
