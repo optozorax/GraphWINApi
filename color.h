@@ -15,11 +15,12 @@ typedef union Color__ {
 
 	Color__() {};
 	Color__(DWORD a) {clrref = a;}
-	Color__(UINT32 a) {clrref = a;}
+	//Color__(UINT32 a) {clrref = a;}
 } Color;
 
 const Color White = {0xFFFFFFFF};
 const Color Black = {0xFF000000};
+const Color Transparent = {0x01000000};
 
 Color rgb(const int, const int, const int);
 Color argb(const int, const int, const int, const int); 

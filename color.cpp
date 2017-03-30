@@ -70,6 +70,8 @@ gwapi::Color gwapi::overlay(Color a, Color b) {
 	Color c;
 	
 	UCHAR da = a.m[3];
+	if (da == 0 && a.clrref != 0) da = 255;
+	if (da == 1) da = 0;
 	
 	/* Маленькая оптимизация. */
 	if (da != 0) {
