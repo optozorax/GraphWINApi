@@ -12,7 +12,7 @@ using namespace std;
 
 namespace gwapi{
 
-enum TextStyle{LeftUp, Center};
+enum TextWriteStyle{LeftUp, Center};
 enum BezierStyle{Default, Pieces};
 
 struct Pen {
@@ -35,15 +35,15 @@ public:
 	~Bufer();
 	
 	void drawTo(Bufer, int x = 0, int y = 0, int width = 0, int height = 0);
-	void drawAlphaTo(Bufer, int x = 0, int y = 0, int width = 0, int height = 0);
+	void drawAlphaTo(Bufer&, int x = 0, int y = 0, int width = 0, int height = 0);
 	
 	void clear(Color = White);
 	
 	Pen penSet(Color, int = 1);
 	Brush brushSet(Color);
 	
-	void textOut(Point, string, TextStyle = LeftUp);
-	void textStyle(Color, int = 14, string = "Consolas");
+	void textOut(Point, string, TextWriteStyle = LeftUp);
+	void textStyle(int = 14, string = "Consolas");
 	
 	/* Реализация на основе примитивов виндоус. */
 	void pixelDraw(Point, Color = Black);
