@@ -108,8 +108,6 @@ COLORREF gwapi::toWindowsColor(const Color& a) {
 	return RGB(a.m[0],a.m[1],a.m[2]);
 }
 
-//#define __COLORDEBUG
-
 #ifdef __COLORDEBUG
 #include <stdlib.h>
 #include <windows.h>
