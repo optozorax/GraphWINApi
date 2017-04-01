@@ -36,7 +36,8 @@ Bufer::~Bufer() {
 	DeleteDC(hdc_);
 }
 
-void Bufer::drawTo(Bufer a, int x, int y, int width, int height) {
+void Bufer::boardsToCorrect(Bufer &a, int &x, int &y, int &width, int &height) {
+	// TODO протестировать на все случаи жизни.
 	/* Если высота и ширина равны нулю, то это значит, что надо нарисовать весь буфер. */
 	if (width == 0) width = sizex;	
 	if (height == 0) height = sizey;
@@ -45,33 +46,24 @@ void Bufer::drawTo(Bufer a, int x, int y, int width, int height) {
 	if (width > sizex) width = sizex;
 	if (height > sizey) height = sizey;
 
-	/* Проверка, не выходят ли x y за пределы второго буфера. */
-	if (x > a.sizex) x = sizex;
-	if (y > a.sizey) y = sizey;
+	if (a.sizex != -1) {
+		/* Проверка, не выходят ли x y за пределы второго буфера. */
+		if (x > a.sizex) x = sizex;
+		if (y > a.sizey) y = sizey;
 
-	/* Проверка не выходят ли границы квадрата за пределы второго буфера. */
-	if (x+width > a.sizex) width = sizex-x;
-	if (y+width > a.sizey) height = sizey-y;
-	
+		/* Проверка не выходят ли границы квадрата за пределы второго буфера. */
+		if (x+width > a.sizex) width = sizex-x;
+		if (y+width > a.sizey) height = sizey-y;
+	}
+}
+
+void Bufer::drawTo(Bufer &a, int x, int y, int width, int height) {
+	boardsToCorrect(a, x, y, width, height);
 	BitBlt(a.hdc_, x, y, width, height, hdc_, 0, 0, SRCCOPY);
 }
 
 void Bufer::drawAlphaTo(Bufer &a, int x, int y, int width, int height) {
-	/* Если высота и ширина равны нулю, то это значит, что надо нарисовать весь буфер. */
-	if (width == 0) width = sizex;	
-	if (height == 0) height = sizey;
-
-	/* Проверка хватит ли первого буфера для рисования. */
-	if (width > sizex) width = sizex;
-	if (height > sizey) height = sizey;
-
-	/* Проверка, не выходят ли x y за пределы второго буфера. */
-	if (x > a.sizex) x = sizex;
-	if (y > a.sizey) y = sizey;
-
-	/* Проверка не выходят ли границы квадрата за пределы второго буфера. */
-	if (x+width > a.sizex) width = sizex-x;
-	if (y+width > a.sizey) height = sizey-y;
+	boardsToCorrect(a, x, y, width, height);
 
 	/* Само рисование с прозрачностью. */
 	Point c;
@@ -113,13 +105,14 @@ Brush Bufer::brushSet(Color clr) {
 }
 
 void Bufer::textOut(Point x, string str, TextWriteStyle stl) {
-	// TODO сделать для разных стилей
-	// TODO сделать чтобы работало для переносов строк
+	// TODO сделать для разных стилей.
+	// TODO сделать чтобы работало для переносов строк.
 	// GetTextExtentPoint32 - это поможет
 	TextOut(hdc_, x[0], x[1], (LPCSTR)str.c_str(), strlen(str.c_str())); 
 }
 
 void Bufer::textStyle(int size, string name) {
+	// TODO Понять: надо ли через эту функцию получать такие параметры, как: толщина, курсив и т.д. что задается через структуру
 	LOGFONT font;
 	font.lfHeight 			= -size; /* Высота шрифта. */ 
 	font.lfWidth 			= 0; /* Ширина символов в шрифте. */
@@ -152,10 +145,6 @@ void Bufer::pixelDraw(Point x, Color c) {
 	operator[](x) = c.clrref;
 }
 
-Color Bufer::pixelGet(Point a) {
-	return operator[](a);
-}
-
 void Bufer::rectDraw(Point a, Point b) {
 	for (int i = a[0]; i < b[0]; i++) {
 		for (int j = a[1]; j < b[1]; j++) {
@@ -177,45 +166,72 @@ void Bufer::lineDraw(Point a, Point b) {
 	LineTo(hdc_, b[0], b[1]);
 }
 
-void Bufer::bezierDraw(vector<Point>, BezierStyle) {
-	// TODO сделать потом
-}
-
 inline UINT32& Bufer::operator[](Point a) {
 	return mas_[a[0] + sizey*a[1]];
 }
 
-void gwapi::Bufer::pixelDraw(point2, Color) {
-	// TODO реализовать в далеком будущем
+UINT32& Bufer::pixelGet(Point a) {
+	if (inRectangle(a, Point(sizex,sizey),Point(0,0))) {
+		return operator[](a);
+	} else {
+		// TODO Понять: тут точно надо исключение? Скорее всего можно просто ничего не делать
+		throw Bad_Coordinate();
+	}
 }
 
-Color gwapi::Bufer::pixelGet(point2) {
-	// TODO реализовать в далеком будущем
-	return Color();
+void Bufer::bezierDraw(vector<Point>, BezierStyle) {
+	// TODO реализовать
+	// Последовательность работы:
+	//		Рассчитать длину ломаной по точкам.
+	//		Взять количество итераций = длина\5.
+	//		Рисовать кривую Безье обычным образом по полученному числу итераций при помощи целочисленной прямой.
+}
+
+void gwapi::Bufer::pixelDraw(point2, Color) {
+	// TODO реализовать
+	// Это вещественный пиксель. 
+	// Если координата целая - он закрашивает один пиксель.
+	// Если координата нецелая, то считается, что это квадрат, центр которого находится +point2(0.5,0.5), 
+	//		и там уже считается какую площадь занимает некоторая часть этого пикселя. В итоге он рисует на четыре пикселя.
 }
 
 void gwapi::Bufer::rectDraw(point2, point2) {
-	// TODO реализовать в далеком будущем
+	// TODO реализовать
+	// Для того, чтобы нарисовать прямоугольник с вещественными координатами надо: 
+	//		Нарисовать его внутреннюю часть
+	//		Аналогичным образом с окружностью рисовать границу и внутреннюю часть.
 }
 
 void gwapi::Bufer::circleDraw(point2, double) {
-	// TODO реализовать в далеком будущем
+	// TODO реализовать
+	// Окружность рисуется внутренней кистью и внешней границей с помощью пера.
+	// Граница может иметь немалую толщину или прозрачность. Поэтому внутренняя часть будет рисоваться до внутренней части границы.
+	// Внутри окружности все что не граница - то внутренняя часть, поэтому и цвета там будут складываться особым образом.
+	// Пиксель окружности можно представлять такими же методами, как и снизу
 }
 
 void gwapi::Bufer::lineDraw(point2, point2) {
-	// TODO реализовать в далеком будущем
+	// TODO реализовать
+	// Для того, чтобы нарисовать линию со сглаживанием, можно подойти к рассмотрению степени насыщенности цвета с разных сторон:
+	//		Насыщенность считается как отношение площади которую занимает прямоугольник линии с ее толщиной в данном пикселе к площади пикселя
+	//		Методы рассчета площади:
+	//			Перебираются n x n точек внутри пикселя-квадрата и для каждой рассчитывается, принадлежит ли она данной линии, и уже площадь считается как количество принадлежащих точек
+	//			Пиксель считается кругом, и площадь прямой высчитывается как площадь соответствующего сегмента круга
+	//			Пиксель считается как фигура, задаваемая уравнением x^n + y^n = 1, где n - большое четное число. Тут уже площадь находится через сложный матан.
+	//			Аналитически рассчитать формулы для рассчета идеальной площади которую линия занимает в пикселе.
+	//		В будущем можно будет рассмотреть все эти методы и сравнить качество картинки и скорость работы.
+	//		И уже в итоговый вариант войдет оптимальный по скорости и качеству.
 }
 
 }
 
-#define __BUFERTEST
 #ifdef __BUFERTEST
 using namespace gwapi;
 #include <windows.h>
 #include <iostream>
 #include <stdlib.h>
 int main() {
-	Bufer a(300,300), b(300, 300);
+	Bufer a(300,300), b(300, 300), currConsole(GetDC(GetConsoleWindow()));
 
 	b.clear(Transparent);
 	b.brushSet(argb(128,128,0,128));
@@ -232,8 +248,8 @@ int main() {
 
 	b.drawAlphaTo(a);
 
-	a.drawTo(GetDC(GetConsoleWindow()));
-	b.drawTo(GetDC(GetConsoleWindow()), 300);
+	a.drawTo(currConsole);
+	b.drawTo(currConsole, 300);
 	system("pause");
 	return 0;
 }
