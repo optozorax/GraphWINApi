@@ -31,6 +31,9 @@ ostream& operator<<(ostream& cout,  AnyPoint<T, n> a);
 template<class T, int n> 
 AnyPoint<T, n> operator-( AnyPoint<T, n> a);
 
+template<class T, int n> 
+bool inRectangle(AnyPoint<T, n>, AnyPoint<T, n>, AnyPoint<T, n>);
+
 typedef AnyPoint<int,2> Point;
 typedef AnyPoint<double,2> point2;
 typedef AnyPoint<double,3> point3;
@@ -114,7 +117,6 @@ bool operator==(AnyPoint<T, n> a, AnyPoint<T, n> b) {
 
 template<class T, int n>
 ostream & operator<<(ostream &cout, AnyPoint<T, n> a) {
-	//TODO протестировать
 	cout << "(";
 	for (int i = 0; i < n-1; i++) {
 		cout << a[i] << ", ";
@@ -128,6 +130,16 @@ template<class T, int n>
 AnyPoint<T, n> operator-(AnyPoint<T, n> a) {
 	return a*((T)-1);
 }
+
+template<class T, int n> 
+bool inRectangle(AnyPoint<T, n> a, AnyPoint<T, n> b, AnyPoint<T, n> c) {
+	for (int i = 0; i < n; i++) {
+		if (!(a[i]>=b[i] && a[i]<=c[i])) {
+			return false;
+		}
+	}
+	return true;
+};
 
 //#define __POINTDEBUG
 
