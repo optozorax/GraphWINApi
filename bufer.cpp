@@ -21,6 +21,9 @@ Bufer::Bufer(int x, int y) : sizex(x), sizey(y) {
 	
 	mas_ = (UINT32*) pvBits;
 	SelectObject(hdc_, hbmp_);
+
+	brushSet(White);
+	penSet(Black);
 }
 
 Bufer::Bufer(HDC hdc) {
@@ -29,6 +32,9 @@ Bufer::Bufer(HDC hdc) {
 	mas_ = NULL;
 	sizex = 1000;
 	sizey = 1000;
+
+	brushSet(White);
+	penSet(Black);
 }
 
 Bufer::~Bufer() {
@@ -66,11 +72,12 @@ void Bufer::drawAlphaTo(Bufer &a, int x, int y, int width, int height) {
 	boardsToCorrect(a, x, y, width, height);
 
 	/* Само рисование с прозрачностью. */
-	Point c;
+	Point c, d;
 	for (int x1 = x; x1<x+width; x1++) {
 		for (int y1 = y; y1<y+height; y1++) {
 			c = Point(x1, y1);
-			a[c] = overlay(operator[](c), a[c]).clrref;
+			d = Point(x1 - x, y1 - y);
+			a[c] = overlay(operator[](d), a[c]).clrref;
 		}
 	}
 }
