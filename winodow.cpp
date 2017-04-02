@@ -1,7 +1,7 @@
 #include "window.h"
 
 HWND global_hwnd = 0;
-DWORD WINAPI gwapi::tickThreadProc(LPVOID a) {
+DWORD WINAPI gwapi::windowMainThread(LPVOID a) {
 	/* Создание структуры окна. */
 	WNDCLASSEX wc;
 	wc.cbSize = sizeof( WNDCLASSEX );
@@ -9,7 +9,7 @@ DWORD WINAPI gwapi::tickThreadProc(LPVOID a) {
 					// TODO проверить что это дает
 					//# CS_DROPSHADOW	Создает эффект падающей тени на окно. Как правило, он включается для маленьких, временных окон типа меню. #//
 					//# Можно использовать для окон со стилем WS_POPUP. #//
-	wc.lpfnWndProc = gwapi::WndProc;
+	wc.lpfnWndProc = gwapi::currentWndProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = GetModuleHandle(NULL);
@@ -59,11 +59,7 @@ DWORD WINAPI gwapi::tickThreadProc(LPVOID a) {
 						//# WS_VISIBLE		Создает окно, которое является первоначально видимым. Использовать в кнопках. #//
 						//# WS_VSCROLL		Создает окно, которое имеет вертикальную линейку прокрутки. #//
 						//# WS_POPUP | WS_THICKFRAME	Создает окно, имеющее только рамку windows, без заголовка. #//
-		CW_USEDEFAULT, 0, 500, 500, GetConsoleWindow(), NULL, GetModuleHandle(NULL), NULL);
-
-	//hdc_ = GetDC(hwnd_);
-
-	//sizeSet(x,y);
+		CW_USEDEFAULT, 0, 500, 500, NULL, NULL, GetModuleHandle(NULL), NULL);
 
 	/* Показ окна. */
 	UpdateWindow( global_hwnd );
@@ -84,125 +80,108 @@ DWORD WINAPI gwapi::tickThreadProc(LPVOID a) {
 	return 0;
 }
 
-/* ------------------------------------------------------------------------- */
-/* Процедура обработки сообщений. */
-LRESULT CALLBACK gwapi::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK gwapi::currentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	/* Указатель на объект, который относится к текущему окну. */
+	Window* this1 = Stack_[hwnd];
+
 	switch ( msg ) {
-		//case WM_ACTIVATE:{
+		case WM_ACTIVATE:{
 			/* Посылается когда окно активизируется или деактивизируется */
-			//# Если программа обработала это сообщение, она должна возвратить нуль. #//
-				//# fActive = LOWORD(wParam);           // флажок активизации #//
-				//# fMinimized = (BOOL) HIWORD(wParam); // флажок минимизации #//
-				//# hwndPrevious = (HWND) lParam;       // дескриптор окна #//
-			//# fActive #//
-			//# Значение младшего байта слова wParam. Устанавливает, активизируется ли окно или оно деактивизируется. #// 
-			//# Этот параметр может быть одним из следующих значений: #//
-				//# WA_ACTIVE - Активизировано некоторым методом другим, чем щелчок мыши. #//
-					//# (например, обращением к функции SetActiveWindow или использованием интерфейса клавиатуры для выбора окна) #//
-				//# WA_CLICKACTIVE - Активизировано щелчком мыши. #//
-				//# WA_INACTIVE - Деактивизировано. #//
-			//# fMinimized #//
-				//# Значение старшего байта слова wParam. Устанавливает свернутое состояние окна, активизируемого или деактивизируемого. #// 
-				//# Значение, отличающееся от нуля, указывает, что окно свернуто (минимизировано). #//
-			//# hwndPrevious #//
-				//# Значение lParam. Идентифицирует окно, активизируемое или деактивизируемое, в зависимости от значения параметра fActive. #// 
-				//# Если значение fActive - WA_INACTIVE, hwndPrevious - дескриптор активизируемого окна. #// 
-				//# Если значение fActive - WA_ACTIVE или WA_CLICKACTIVE, hwndPrevious - дескриптор деактивизируемого окна. #// 
-				//# Этот дескриптор может быть ПУСТО (NULL). #//
-			//# ----------------------------------------------------------------------- #//
-			//# Действие по умолчанию #//
-				//# Если окно активизируется и не свернуто (минимизировано), функция DefWindowProc устанавливает фокус клавиатуры в окно. #//
-			return 0; 
-		//};break;
+			// TODO понять надо ли это, и надо ли возвращать ноль или стандартную функцию(устанавливает фокус клавы в окно)
+			bool fActive = !(LOWORD(wParam) == WA_INACTIVE);
+			bool fMinimized = (BOOL) HIWORD(wParam);
+			
+			if (this1 != 0)
+				(*(this1->funcActivate))(fActive, fMinimized);
+
+			return 0;
+		};break;
 		case WM_CLOSE:{
 			/* Сигнал, означающий, что прикладная программа должна завершить свою работу. */
-			//# Если приложение обрабатывает это сообщение, оно должно возвратить ноль. #//
-			//# Действие по умолчанию #//
-				//# Функция DefWindowProc обращается к функции DestroyWindow, чтобы уничтожить окно. #//
-			//# Примечания: #//
-				//# Прикладная программа может запросить пользователя о подтверждении, до разрушения окна, #// 
-				//# в ходе обработки сообщение WM_CLOSE и вызывает функцию DestroyWindow только тогда, если пользователь подтверждает выбор. #//
+			if (this1 != 0)
+				(*(this1->funcDestroy))();
+
 			DestroyWindow( hwnd );
 			return 0;
 		};break;case WM_CREATE:{
 			/* Вызывается, когда должно быть создано окно. */
 			//# Принимает после того, как создано, но перед тем, как стать видимым. #//
-			//# Если приложение обрабатывает это сообщение, оно возвращает 0, чтобы продолжить создание окна. #//
-			//# Если прикладная программа возвращает -1, то окно разрушается, и функция CreateWindow возвращает значение дескриптора ПУСТО (NULL). #//
+			
+			// здесь особые вещички
 			return 0;
 		};break;case WM_DESTROY:{
 			/* Когда окно разрушается. */
 			PostQuitMessage( 0 );
 			return 0;
 		};break;
-		//case WM_GETMINMAXINFO:{
+		case WM_GETMINMAXINFO:{
 			/* Выдает максимальные и минимальные размеры окна. */
-			// TODO сделать процедуру, чтобы можно было задавать макс и минимальные размеры окна
-			//MINMAXINFO *pInfo = (MINMAXINFO *)lParam;
-			//pInfo->ptMinTrackSize = {100,	100	}; /* Установили минимальный размер. */
-			//pInfo->ptMaxTrackSize = {500,	500	}; /* Установили максимальный размер. */
-			//return 0;
-		//};break;
+			MINMAXINFO *pInfo = (MINMAXINFO *)lParam;
+
+			if (this1 != 0) {
+				pInfo->ptMinTrackSize = { this1->MinSize[0], this1->MinSize[1] };
+				pInfo->ptMaxTrackSize = { this1->MaxSize[0], this1->MaxSize[1] };
+			}
+
+			return 0;
+		};break;
 		case WM_MOVE:{
 			/* Сообщение посылается при изменении положения окна. */
-			// TODO сделать чтобы можно было на этот случай назначить функцию
-			//# Возвращаемые значения #//
-			//# Если программа обрабатывает это сообщение, она должна возвратить ноль. #//
-			int xPos = (int) LOWORD(lParam);    /* позиция по горизонтали */
-			int yPos = (int) HIWORD(lParam);    /* позиция по вертикали */
+			int xPos = (int) LOWORD(lParam);
+			int yPos = (int) HIWORD(lParam);
+
+			if (this1 != 0)
+				(*(this1->funcMove))(xPos, yPos);
+
 			return 0;
 		};break;case WM_PAINT:{
 			/* Сообщение посылается, когда нужно отрисовать рабочую область. */
 			static HDC hdc;
 			static PAINTSTRUCT ps;
-			
 			hdc = BeginPaint( hwnd, &ps );
-			/* Рисование здесь. */
+			
+			Bufer a_(hdc);
+			if (this1 != 0)
+				this1->canvas.drawTo(a_);
+
 			EndPaint( hwnd, &ps );
 			return 0;
-		};break;
-		//case WM_ERASEBKGND:{
-			// TODO понять: нужно ли это
-			//# Использовать только если программа сама полностью отрисовывает фон и прочее. #//
-			//return TRUE;
-		//};break;
-		case WM_SIZE:{
+		};break;case WM_SIZE:{
 			/* Сообщение посылается окну после того, как его размер изменился. */
-			// TODO сделать чтобы можно было на этот случай назначить функцию
 			int fwSizeType = (int) wParam;
 				//# Определяет тип запрошенного изменения размеров. Этот параметр может принимать одно из следующих значений: #//
-				//# SIZE_MAXHIDE	Сообщение посылается всем выскакивающим окнам, когда развернуто некоторое другое окно. #//
 				//# SIZE_MAXIMIZED	Окно было развернуто. #//
-				//# SIZE_MAXSHOW	Сообщение посылается всем выскакивающим окнам, когда некоторое другое окно было восстановлено в его прежних размерах. #//
 				//# SIZE_MINIMIZED	Окно было свернуто(минимизировано). #//
-				//# SIZE_RESTORED	Окно было изменено, но ни одно значение SIZE_MINIMIZED ни SIZE_MAXIMIZED не применяется. #// 
 			int nWidth = LOWORD(lParam); 
-				//# Устанавливает новую ширину рабочей области. #//
 			int nHeight = HIWORD(lParam); 
-				//# Устанавливает новую высоту рабочей области. #//
+
+			if (fwSizeType != SIZE_MINIMIZED) {
+				if (this1 != 0)
+					(*(this1->funcSized))(nWidth, nHeight);
+			}
 			return 0;
 		};break;case WM_SIZING:{
 			/* Сообщение посылается во время изменении размеров окна. */
-			// TODO сделать чтобы можно было на этот случай назначить функцию
 			int fwSide = wParam;
-				//# Указывает, который край окна передвигается. Этот параметр может быть комбинацией следующих значений: #//
-	
-				//# WMSZ_BOTTOM		Нижний край #//
-				//# WMSZ_BOTTOMLEFT	Левый нижний угол #//
-				//# WMSZ_BOTTOMRIGHT	Правый нижний угол #//
-				//# WMSZ_LEFT		Левый край #//
-				//# WMSZ_RIGHT		Правый край #//
-				//# WMSZ_TOP		Верхний край #//
-				//# WMSZ_TOPLEFT	Верхний левый угол #//
-				//# WMSZ_TOPRIGHT	Левый правый угол #// 
 			RECT* lprc = (LPRECT) lParam;
-				//# Адрес структуры RECT с экранными координатами перетаскиваемого прямоугольника. #// 
-				//# Чтобы изменять размер или позицию перетаскиваемого прямоугольника, прикладная программа должна изменять члены этой структуры. #//
+			
+			SizingType szType;
+			switch (fwSide) {
+				case (WMSZ_BOTTOM): szType = Bottom; break;
+				case (WMSZ_BOTTOMLEFT): szType = BottomLeft; break;
+				case (WMSZ_BOTTOMRIGHT): szType = BottomRight; break;
+				case (WMSZ_LEFT): szType = Left; break;
+				case (WMSZ_RIGHT): szType = Right; break;
+				case (WMSZ_TOP): szType = Top; break;
+				case (WMSZ_TOPLEFT): szType = TopLeft; break;
+				case (WMSZ_TOPRIGHT): szType = TopRight; break;
+			}
 				
-			//# Возвращаемое значение #//
-				//# Программа должна возвратить ИСТИНУ (TRUE), если она обрабатывает это сообщение. #//
+			if (this1 != 0)
+				(*(this1->funcSizing))(lprc->left, lprc->top, lprc->right, lprc->bottom, szType);
 			return TRUE;
-		};break;case WM_COMMAND:{
+		};break;
+		//case WM_COMMAND:{
 			/* Сообщение отправляется тогда, когда пользователь выбирает командный пункт из меню или происходит нажатие на кнопку и т.д. */
 			// TODO сделать чтобы можно было на этот случай назначить функцию
 			//switch ( LOWORD(wParam) ) {
@@ -213,18 +192,29 @@ LRESULT CALLBACK gwapi::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 				//};break;
 					/* ... */
 			//};  
-		};break;default:
+		//};break;
+		default:
 			return DefWindowProc( hwnd, msg, wParam, lParam );
 	};
 }
 /* ------------------------------------------------------------------------- */
 
-gwapi::Window::Window(int x, int y, string name) : canvas(x+50, y+50) {
+gwapi::Window::Window(int x, int y, string name) : 
+	canvas(x+50, y+50), 
+	MinSize(0,0), 
+	MaxSize(10000,10000), 
+	funcSized(&NOPE1), 
+	funcSizing(&NOPE2), 
+	funcMove(&NOPE1), 
+	funcActivate(&NOPE3),
+	funcDestroy(&NOPE4)
+{
 	/* Создание потока, который обрабатывает сообщения данного окна. */
-	hTickThread = CreateThread( NULL, 0, &tickThreadProc, NULL, 0, NULL);	
+	CreateThread( NULL, 0, &windowMainThread, NULL, 0, NULL);	
 
 	Sleep(50);
 	hwnd_ = global_hwnd;
+	Stack_[hwnd_] = this;
 	hdc_ = GetDC(hwnd_);
 
 	sizeSet(x, y);
@@ -289,15 +279,21 @@ int main() {
 	a.canvas.lineDraw(Point(100,100), Point(200,200));
 	a.redraw();
 
-	b.canvas.penSet(gwapi::rgb(0,0,255), 3);
+	b.canvas.penSet(gwapi::argb(128,0,0,255), 3);
+	b.canvas.brushSet(gwapi::argb(128,0,0,255));
 	b.canvas.lineDraw(Point(100,200), Point(200,100));
+	b.canvas.rectDraw(Point(10,10), Point(200,150));
 	b.redraw();
 	
 	system("pause");
 
 	a.canvas.penSet(gwapi::rgb(255,0,0), 3);
 	a.canvas.lineDraw(Point(100,200), Point(200,100));
+	b.canvas.rectDraw(Point(130,170), Point(200,100));
+	b.canvas.drawAlphaTo(a.canvas, 100);
+
 	a.redraw();
+	b.redraw();
 
 	system("pause");
 

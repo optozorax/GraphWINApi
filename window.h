@@ -7,6 +7,7 @@
 #define _WIN32_WINNT 0x0501
 
 #include <string>
+#include <map>
 #include <windows.h>
 #include "bufer.h"
 
@@ -14,18 +15,33 @@ using namespace std;
 
 namespace gwapi{
 
-enum WindowType {DefaultWindow, NoBorder};
+map<HWND, Window*> Stack_;
 
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-DWORD WINAPI tickThreadProc(HANDLE);
+enum WindowType {DefaultWindow, NoBorder};
+enum SizingType {Bottom, BottomLeft, BottomRight, Left, Right, Top, TopLeft, TopRight};
+
+void NOPE1(int, int) {};
+void NOPE2(long&, long&, long&, long&, int) {};
+void NOPE3(bool, bool) {};
+void NOPE4(void) {};
+
+LRESULT CALLBACK currentWndProc(HWND, UINT, WPARAM, LPARAM);
+DWORD WINAPI windowMainThread(HANDLE);
 
 class Window {
 	HWND hwnd_;
 	HDC hdc_;
 	Bufer current_;
-
-	HANDLE hTickThread;
 public:
+	void (*funcSized)(int, int);
+	void (*funcSizing)(long&, long&, long&, long&, int);
+	void (*funcMove)(int, int);
+	void (*funcActivate)(bool, bool);
+	void (*funcDestroy)(void);
+
+	Point MinSize;
+	Point MaxSize;
+
 	Bufer canvas;
 	
 	Window(int = 300, int = 300, string = "gwapi program"); //, WindowType = DefaultWindow);
