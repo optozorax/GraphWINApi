@@ -1,14 +1,32 @@
 #include "window.h"
 
+gwapi::WindowType::WindowType() {
+	pos = Point(0,0);
+	size = Point(300,300);
+	minSize = Point(0,0);
+	maxSize = Point(10000,10000);
+
+	caption = "GraphWinAPI program";
+
+	flags.disabled = 0;
+	flags.dropShadow = 0;
+	flags.icon = 0;
+	flags.maximizeButton = 0;
+	flags.maximized = 0;
+	flags.minimizeButton = 0;
+	flags.onTop = 0;
+
+	style = Standart;
+}
+
 HWND global_hwnd = 0;
 DWORD WINAPI gwapi::windowMainThread(LPVOID a) {
+	WindowType curWin = *((WindowType*) a);
+
 	/* Создание структуры окна. */
 	WNDCLASSEX wc;
 	wc.cbSize = sizeof( WNDCLASSEX );
-	wc.style = CS_HREDRAW | CS_VREDRAW | CS_PARENTDC | CS_SAVEBITS; /* Устанавливает стиль класса. */
-					// TODO проверить что это дает
-					//# CS_DROPSHADOW	Создает эффект падающей тени на окно. Как правило, он включается для маленьких, временных окон типа меню. #//
-					//# Можно использовать для окон со стилем WS_POPUP. #//
+	wc.style = CS_HREDRAW | CS_VREDRAW | CS_PARENTDC | CS_SAVEBITS | CS_DBLCLKS; /* Устанавливает стиль класса. */
 	wc.lpfnWndProc = gwapi::currentWndProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
@@ -17,49 +35,63 @@ DWORD WINAPI gwapi::windowMainThread(LPVOID a) {
 	wc.hCursor = LoadCursor( NULL, IDC_ARROW );
 	wc.hbrBackground = CreateSolidBrush(RGB(255,255,255));
 	wc.lpszMenuName = NULL;
-	// TODO сделать чтобы классы для каждого окна были уникальны
-	wc.lpszClassName = "NADO_SDELAT_CHTOBI_KLASSI_BILI_UNIKALNI";
 	wc.hIconSm = LoadIcon( NULL, IDI_APPLICATION );
-	/* Регистрация окна и обработка ошибки. */
-	/* Функция регистрирует класс окна для последующего использования при вызове функции CreateWindow или CreateWindowEx. */
-	eshe:
-	if ( !RegisterClassEx(&wc) ) {
-		//MessageBox( NULL, "Failed to register window class.", "Error", MB_OK );
-		wc.lpszClassName = "KAK_TO_TAK";
-		goto eshe;
+
+	if (curWin.flags.dropShadow)
+		wc.style |= CS_DROPSHADOW;
+	
+	/* Для каждого окна классы уникальны */
+	long currentClass = 0;
+	string className;
+	do {
+		currentClass++;
+		className = "GraphWinAPI_" + to_string(currentClass);
+		wc.lpszClassName = className.c_str();
+	} while (!RegisterClassEx(&wc));
+
+	DWORD EXstyle = 0, DEFstyle = 0;
+
+	if (curWin.flags.disabled)
+		DEFstyle |= WS_DISABLED;
+	if (curWin.flags.icon)	
+		DEFstyle |= WS_SYSMENU;
+	if (curWin.flags.maximizeButton)
+		DEFstyle |= WS_MAXIMIZEBOX;
+	if (curWin.flags.maximized)
+		DEFstyle |= WS_MAXIMIZE;
+	if (curWin.flags.minimizeButton)	
+		DEFstyle |= WS_MINIMIZEBOX;
+	if (curWin.flags.onTop)
+		EXstyle |= WS_EX_TOPMOST;
+
+	switch (curWin.style) {
+	case WindowType::Standart:
+		DEFstyle |= WS_TILEDWINDOW;
+		break;
+	case WindowType::Tool:
+		DEFstyle |= WS_TILEDWINDOW;
+		EXstyle |= WS_EX_TOOLWINDOW;
+		break;
+	case WindowType::Caption:
+		DEFstyle |= WS_POPUP | WS_CAPTION;
+		EXstyle |= WS_EX_TOOLWINDOW;
+		break;
+	case WindowType::Popup:
+		DEFstyle |= WS_POPUP | WS_THICKFRAME;
+		break;
+	case WindowType::NoBorder:
+		DEFstyle |= WS_POPUP;
+		break;
 	}
 
 	global_hwnd = CreateWindowEx(
-		WS_EX_OVERLAPPEDWINDOW, /* Определяет расширенный стиль создаваемого окна. */
-								//# WS_EX_TOOLWINDOW		Создает окно инструментальных средств; то есть окно предполагается использовать как плавающую инструментальную панель. Окно инструментальных средств имеет область заголовка, которая короче, чем нормальная строка заголовка, а заголовок окна выводится, с использованием меньшего шрифта. Окно инструментальных средств не появляется в панели задач или в диалоговом окне, которое появляется тогда, когда пользователь нажимает ALT+TAB. Если окно инструментальных средств имеет системное меню, его пиктограмма не отображается в заголовке. Однако, Вы можете показывать на экране системное меню, щелкая правой кнопкой мыши или, вводя с клавиатуры ALT+SPACE. #// 
-								//# WS_EX_TOPMOST		Определяет, что окно, созданное с этим стилем должно быть размещено выше всех, не самых верхних окон и должно стоять выше их, даже тогда, когда окно деактивировано. Чтобы добавить или удалить этот стиль, используйте функцию SetWindowPos. #// 
-		"NADO_SDELAT_CHTOBI_KLASSI_BILI_UNIKALNI",
-		"test",//name.c_str(),
-		WS_TILEDWINDOW, /* Определяет стиль создаваемого окна. */
-						// TODO разбить эти стили на конкретные представления окна
-						//# Этот параметр может быть комбинацией стилей окна, плюс стили органов управления, указанных ниже: #//
-						//# Стиль		Предназначение #//
-						//# WS_BORDER		Создает окно, которое имеет тонкую линию рамки. #//
-						//# WS_CAPTION		Создает окно, которое имеет строку заголовка (включает в себя стиль WS_BORDER). #//
-						//# WS_CHILD		Создает дочернее окно. Использовать в кнопках. #//
-						//# WS_DISABLED		Создает окно, которое первоначально заблокировано. Заблокированное окно не может принимать вводимую информацию от пользователя. #//
-						//# WS_DLGFRAME		Создает окно, которое имеет стиль рамки, обычно используемый с диалоговыми окнами. Окно с этим стилем не может иметь строку заголовка. #//
-						//# WS_HSCROLL		Создает окно, которое имеет горизонтальную линейку прокрутки. #//
-						//# WS_MAXIMIZE		Создает окно, которое первоначально развернуто. #//
-						//# WS_MAXIMIZEBOX	Создает окно, которое имеет кнопку Развернуть (Maximize). Не может быть объединен со стилем WS_EX_CONTEXTHELP. К тому же должен быть определен стиль WS_SYSMENU. #//
-						//# WS_MINIMIZE		Создает окно, которое первоначально свернуто. Тот же самый стиль, что и WS_ICONIC. #//
-						//# WS_MINIMIZEBOX	Создает окно, которое имеет кнопку Свернуть (Minimize). Не может быть объединен со стилем WS_EX_CONTEXTHELP. К тому же должен быть определен стиль WS_SYSMENU. #//
-						//# WS_POPUP		Создает выскакивающее окно. Этот стиль не может использоваться со стилем WS_CHILD. #//
-						//# WS_SIZEBOX		Создает окно, которое имеет установку размеров рамки окна. Тот же самое, что и стиль WS_THICKFRAME. #//
-						//# WS_SYSMENU		Создает окно, которое имеет меню окна (window-menu) в его строке заголовка. К тому же должен быть определен стиль WS_CAPTION. #//
-						//# WS_TABSTOP		Определяет элемент управления, который может принимать фокус клавиатуры, когда пользователь нажимает клавишу ТАБУЛЯЦИИ (TAB). Нажатие на клавиши табуляции передает фокус клавиатуры на следующий элемент управления со стилем WS_TABSTOP. #//
-						//# WS_THICKFRAME	Создает окно, которое имеет установку размеров рамки окна. То же самое, что и стиль WS_SIZEBOX. #//
-						//# WS_TILED		Создает перекрывающее окно. Перекрывающее окно имеет строку заголовка и рамку. То же самое, что и стиль WS_ OVERLAPPED. #//
-						//# WS_TILEDWINDOW	Создает перекрывающее окно со стилями WS_OVERLAPPED, WS_CAPTION, WS_SYSMENU, WS_THICKFRAME, WS_MINIMIZEBOX и WS_MAXIMIZEBOX. То же самое, что и стиль WS_ OVERLAPPEDWINDOW. #//
-						//# WS_VISIBLE		Создает окно, которое является первоначально видимым. Использовать в кнопках. #//
-						//# WS_VSCROLL		Создает окно, которое имеет вертикальную линейку прокрутки. #//
-						//# WS_POPUP | WS_THICKFRAME	Создает окно, имеющее только рамку windows, без заголовка. #//
-		CW_USEDEFAULT, 0, 500, 500, NULL, NULL, GetModuleHandle(NULL), NULL);
+		EXstyle,
+		wc.lpszClassName,
+		curWin.caption.c_str(),
+		DEFstyle,
+		curWin.pos[0], curWin.pos[1],
+		curWin.size[0], curWin.size[1],
+		NULL, NULL, GetModuleHandle(NULL), NULL);
 
 	/* Показ окна. */
 	UpdateWindow( global_hwnd );
@@ -82,7 +114,7 @@ DWORD WINAPI gwapi::windowMainThread(LPVOID a) {
 
 LRESULT CALLBACK gwapi::currentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	/* Указатель на объект, который относится к текущему окну. */
-	Window* this1 = Stack_[hwnd];
+	Window* this1 = WindowMap_[hwnd];
 
 	switch ( msg ) {
 		case WM_ACTIVATE:{
@@ -105,9 +137,9 @@ LRESULT CALLBACK gwapi::currentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 			return 0;
 		};break;case WM_CREATE:{
 			/* Вызывается, когда должно быть создано окно. */
-			//# Принимает после того, как создано, но перед тем, как стать видимым. #//
 			
 			// здесь особые вещички
+
 			return 0;
 		};break;case WM_DESTROY:{
 			/* Когда окно разрушается. */
@@ -149,9 +181,6 @@ LRESULT CALLBACK gwapi::currentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 		};break;case WM_SIZE:{
 			/* Сообщение посылается окну после того, как его размер изменился. */
 			int fwSizeType = (int) wParam;
-				//# Определяет тип запрошенного изменения размеров. Этот параметр может принимать одно из следующих значений: #//
-				//# SIZE_MAXIMIZED	Окно было развернуто. #//
-				//# SIZE_MINIMIZED	Окно было свернуто(минимизировано). #//
 			int nWidth = LOWORD(lParam); 
 			int nHeight = HIWORD(lParam); 
 
@@ -199,10 +228,10 @@ LRESULT CALLBACK gwapi::currentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 }
 /* ------------------------------------------------------------------------- */
 
-gwapi::Window::Window(int x, int y, string name) : 
-	canvas(x+50, y+50), 
-	MinSize(0,0), 
-	MaxSize(10000,10000), 
+gwapi::Window::Window(WindowType type) : 
+	canvas(type.size[0]+50, type.size[0]+50), 
+	MinSize(type.minSize), 
+	MaxSize(type.maxSize), 
 	funcSized(&NOPE1), 
 	funcSizing(&NOPE2), 
 	funcMove(&NOPE1), 
@@ -210,14 +239,15 @@ gwapi::Window::Window(int x, int y, string name) :
 	funcDestroy(&NOPE4)
 {
 	/* Создание потока, который обрабатывает сообщения данного окна. */
-	CreateThread( NULL, 0, &windowMainThread, NULL, 0, NULL);	
+	CreateThread( NULL, 0, &windowMainThread, &type, 0, NULL);	
 
+	// TODO как-нибудь избавиться от этого костыля, опасно
 	Sleep(50);
 	hwnd_ = global_hwnd;
-	Stack_[hwnd_] = this;
+	WindowMap_[hwnd_] = this;
 	hdc_ = GetDC(hwnd_);
 
-	sizeSet(x, y);
+	sizeSet(type.size);
 	current_.hdc_ = hdc_;
 }
 
@@ -230,7 +260,7 @@ void gwapi::Window::redraw(void) {
 	canvas.drawTo(current_);
 }
 
-void gwapi::Window::sizeSet(int width, int height) {
+void gwapi::Window::sizeSet(Point sz) {
 	/* Процедура задает размер окна с учетом рамки. */
 	RECT rcClient, rcWindow;
 	POINT ptDiff;
@@ -242,20 +272,24 @@ void gwapi::Window::sizeSet(int width, int height) {
 	ptDiff.y = (rcWindow.bottom - rcWindow.top) - rcClient.bottom;
 
 	/* Изменяется размер. */
-	MoveWindow( hwnd_, rcWindow.left, rcWindow.top, width + ptDiff.x, height + ptDiff.y, false);
+	MoveWindow( hwnd_, rcWindow.left, rcWindow.top, sz[0] + ptDiff.x, sz[1] + ptDiff.y, false);
 }
 
-pair<int, int> gwapi::Window::sizeGet(void) {
-
-	return pair<int, int>();
+Point gwapi::Window::sizeGet(void) {
+	RECT rcClient;
+	GetClientRect( hwnd_, &rcClient );
+	return Point(rcClient.right, rcClient.bottom);
 }
 
-void gwapi::Window::captionSet(string) {
-	// TODO реализовать
+void gwapi::Window::captionSet(string cap) {
+	SetWindowText(hwnd_, cap.c_str());
 }
 
-void gwapi::Window::positionSet(Point) {
-	// TODO реализовать
+void gwapi::Window::positionSet(Point ps) {
+	/* Процедура задает размер окна с учетом рамки. */
+	RECT rcClient;
+	GetClientRect( hwnd_, &rcClient );
+	MoveWindow( hwnd_, ps[0], ps[1], rcClient.right, rcClient.bottom, false);
 }
 
 void gwapi::Window::fullscreen(bool) {
@@ -272,7 +306,21 @@ bool gwapi::Window::isKeyDown(int) {
 #include "color.h"
 #include <stdlib.h>
 int main() {
-	gwapi::Window a(500,500,"Test window, nigga :)"), b;
+	gwapi::WindowType atype, btype, ctype;
+
+	atype.caption = "First window, nigga";
+	atype.size = Point(350, 400);
+	atype.maxSize = Point(400, 450);
+	atype.pos = Point(0, 100);
+
+	btype.caption = "SCND WNDW УПРЛС";
+	btype.style = gwapi::WindowType::Tool;
+	btype.pos = atype.pos + Point(atype.size[0]+20,0);
+
+	ctype.pos = btype.pos + Point(btype.size[0]+20,0);
+	ctype.style = gwapi::WindowType::Caption;
+
+	gwapi::Window a(atype), b(btype), c(ctype);
 	
 	a.canvas.penSet(gwapi::rgb(255,0,0), 3);
 	a.canvas.clear();
@@ -280,7 +328,7 @@ int main() {
 	a.redraw();
 
 	b.canvas.penSet(gwapi::argb(128,0,0,255), 3);
-	b.canvas.brushSet(gwapi::argb(128,0,0,255));
+	b.canvas.brushSet(gwapi::argb(128,255,0,0));
 	b.canvas.lineDraw(Point(100,200), Point(200,100));
 	b.canvas.rectDraw(Point(10,10), Point(200,150));
 	b.redraw();
@@ -291,6 +339,10 @@ int main() {
 	a.canvas.lineDraw(Point(100,200), Point(200,100));
 	b.canvas.rectDraw(Point(130,170), Point(200,100));
 	b.canvas.drawAlphaTo(a.canvas, 100);
+
+	b.sizeSet(Point(200,200));
+
+	c.positionSet(Point(200,200));
 
 	a.redraw();
 	b.redraw();
@@ -304,5 +356,3 @@ int main() {
 /* ~wapitaskbar - всё для работы с таскбаром. */
 
 /* ~wapithread - создание потока. */
-
-/* ~wapiscrollbar - создание скроллбара. */

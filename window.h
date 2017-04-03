@@ -15,16 +15,38 @@ using namespace std;
 
 namespace gwapi{
 
-map<HWND, Window*> Stack_;
+map<HWND, Window*> WindowMap_;
 
-enum WindowType {DefaultWindow, NoBorder};
 enum SizingType {Bottom, BottomLeft, BottomRight, Left, Right, Top, TopLeft, TopRight};
+
+class WindowType {
+public:
+	Point pos, size;
+	Point minSize, maxSize;
+	string caption;
+
+	struct {
+		unsigned int dropShadow : 1;
+		unsigned int onTop : 1;		
+		unsigned int disabled : 1;	
+		unsigned int maximized : 1;
+		unsigned int maximizeButton : 1;
+		unsigned int minimizeButton : 1;
+		unsigned int icon : 1;		
+	} flags;
+
+	enum WindowStyle{Standart, Tool, Caption, Popup, NoBorder} 
+		style;
+
+	WindowType();
+};
 
 void NOPE1(int, int) {};
 void NOPE2(long&, long&, long&, long&, int) {};
 void NOPE3(bool, bool) {};
 void NOPE4(void) {};
 
+// TODO ¬ынести всю обработку сообщений в отдельное пространство имен
 LRESULT CALLBACK currentWndProc(HWND, UINT, WPARAM, LPARAM);
 DWORD WINAPI windowMainThread(HANDLE);
 
@@ -33,6 +55,16 @@ class Window {
 	HDC hdc_;
 	Bufer current_;
 public:
+	// TODO создать отдельный класс с событи€ми окна
+		// http://vsokovikov.narod.ru/New_MSDN_API/Window/notify_wm_moving.htm
+	// TODO добавить событие на двойной клик
+	// TODO добавить событие на мышку
+		// http://www.vsokovikov.narod.ru/New_MSDN_API/Mouse_input/notify_mouse.htm
+	// TODO добавить собыите на клавиатуру
+		// http://vsokovikov.narod.ru/New_MSDN_API/Keyb_input/msg_wm_sethotkey.htm
+		// http://vsokovikov.narod.ru/New_MSDN_API/Keyb_input/notify_wm_keydown.htm
+		// http://vsokovikov.narod.ru/New_MSDN_API/Keyb_input/notify_wm_keyup.htm
+	// TODO добавить событие на таскбар
 	void (*funcSized)(int, int);
 	void (*funcSizing)(long&, long&, long&, long&, int);
 	void (*funcMove)(int, int);
@@ -44,13 +76,13 @@ public:
 
 	Bufer canvas;
 	
-	Window(int = 300, int = 300, string = "gwapi program"); //, WindowType = DefaultWindow);
+	Window(WindowType = WindowType());
 	~Window();
 	
 	void redraw(void);
 	
-	void sizeSet(int, int);
-	pair<int, int> sizeGet(void);
+	void sizeSet(Point);
+	Point sizeGet(void);
 	void captionSet(string);
 	void positionSet(Point);
 	
