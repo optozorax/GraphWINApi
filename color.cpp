@@ -3,17 +3,17 @@
 gwapi::Color gwapi::rgb(const int r, const int g, const int b) {
 	Color c;
 	c.m[3] = 255;
-	c.m[2] = b;
+	c.m[2] = r;
 	c.m[1] = g;
-	c.m[0] = r;
+	c.m[0] = b;
 	return c;
 };
 gwapi::Color gwapi::argb(const int a, const int r, const int g, const int b) {
 	Color c;
 	c.m[3] = a;
-	c.m[2] = b;
+	c.m[2] = r;
 	c.m[1] = g;
-	c.m[0] = r;
+	c.m[0] = b;
 	return c;
 };
 
@@ -105,7 +105,7 @@ gwapi::Color gwapi::overlay(Color a, Color b) {
 };
 
 COLORREF gwapi::toWindowsColor(const Color& a) {
-	return RGB(a.m[0],a.m[1],a.m[2]);
+	return RGB(a.m[2],a.m[1],a.m[0]);
 }
 
 #ifdef __COLORDEBUG
