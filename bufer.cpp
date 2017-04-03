@@ -153,11 +153,12 @@ void Bufer::pixelDraw(Point x, Color c) {
 }
 
 void Bufer::rectDraw(Point a, Point b) {
-	for (int i = a[0]; i < b[0]; i++) {
+	/*for (int i = a[0]; i < b[0]; i++) {
 		for (int j = a[1]; j < b[1]; j++) {
 			operator[](Point(i, j)) = brush_.clrref;
 		}
-	}
+	}*/
+	PatBlt(hdc_, a[0], a[1], b[0]-a[0], b[1]-a[1], PATCOPY);
 	lineDraw(a, Point(b[0], a[1]));
 	lineDraw(a, Point(a[0], b[1]));
 	lineDraw(b, Point(b[0], a[1]));

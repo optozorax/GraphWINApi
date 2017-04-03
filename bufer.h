@@ -38,6 +38,8 @@ public:
 	Bufer(int = 1000, int = 1000);
 	Bufer(HDC);
 	~Bufer();
+
+	// TODO подумать насчет копирования буфера
 	
 	/* Работа с другими буферами. */
 	void drawTo(Bufer&, int x = 0, int y = 0, int width = 0, int height = 0);
