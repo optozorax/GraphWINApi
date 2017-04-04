@@ -1,5 +1,4 @@
-#ifndef __WINDOWDEFINE
-#define __WINDOWDEFINE
+#pragma once
 
 /* Для того, чтобы работалы современные функции. */
 #define _WIN32_IE 0x301
@@ -7,21 +6,22 @@
 #define _WIN32_WINNT 0x0501
 
 #include <string>
-#include <map>
+//#include <map>
 #include <windows.h>
+#include <objbase.h>
+//#include "vlc_windows_interfaces.h"
+#include <Shobjidl.h>
 #include "bufer.h"
+#include "windowlife.h"
 
 using namespace std;
 
 namespace gwapi{
 
-map<HWND, Window*> WindowMap_;
-
-enum SizingType {Bottom, BottomLeft, BottomRight, Left, Right, Top, TopLeft, TopRight};
-
 class WindowType {
 public:
-	Point pos, size;
+	Window *This;
+	Point position, size;
 	Point minSize, maxSize;
 	string caption;
 
@@ -41,19 +41,14 @@ public:
 	WindowType();
 };
 
-void NOPE1(int, int) {};
-void NOPE2(long&, long&, long&, long&, int) {};
-void NOPE3(bool, bool) {};
-void NOPE4(void) {};
-
-// TODO Вынести всю обработку сообщений в отдельное пространство имен
-LRESULT CALLBACK currentWndProc(HWND, UINT, WPARAM, LPARAM);
-DWORD WINAPI windowMainThread(HANDLE);
-
 class Window {
 	HWND hwnd_;
 	HDC hdc_;
 	Bufer current_;
+
+	UINT wm_create_mess;
+	LONG_PTR WS_Style;
+	ITaskbarList3 *pTaskbarList;
 public:
 	// TODO создать отдельный класс с событиями окна
 		// http://vsokovikov.narod.ru/New_MSDN_API/Window/notify_wm_moving.htm
@@ -70,6 +65,8 @@ public:
 	void (*funcMove)(int, int);
 	void (*funcActivate)(bool, bool);
 	void (*funcDestroy)(void);
+
+	// TODO сделать интерфейс для таскбара
 
 	Point MinSize;
 	Point MaxSize;
@@ -92,9 +89,13 @@ public:
 	
 	//# Когда-нибудь сделать интерфейс для работы с потоками, возможно отдельный класс. #//
 	//# Когда-нибудь сделать интерфейс для назначения функций на события. #//
+
+	friend LRESULT WindowLife::create(Window*, HWND&, WPARAM&, LPARAM&);
+	friend DWORD WINAPI WindowLife::windowMainThread(LPVOID);
+	friend void WindowLife::createStyle(WindowType&, DWORD&, DWORD&);
+	friend void WindowLife::taskbarRegister(Window*, UINT);
 };
 
 #define __WINDOWTEST
 
 }
-#endif
