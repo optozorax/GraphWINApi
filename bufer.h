@@ -25,6 +25,12 @@ struct Pen {
 };
 typedef Color Brush;
 
+class Window;
+
+namespace WindowLife {
+	LRESULT create(Window*, HWND&, WPARAM&, LPARAM&);
+}
+
 class Bufer {
 	HDC hdc_;
 	HBITMAP hbmp_;
@@ -82,6 +88,7 @@ public:
 	//# Когда-нибудь написать интерфейс для работы с рисунками. #//
 
 	friend class Window;
+	friend LRESULT gwapi::WindowLife::create(Window*, HWND&, WPARAM&, LPARAM&);
 };
 
 /* Если объявлен этот дефайн, то в файле реализации имеется main, в котором запускаются тесты этого модуля. */
