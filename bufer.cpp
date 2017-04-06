@@ -103,7 +103,7 @@ Pen Bufer::penSet(Color clr, int thick) {
 	pen_.color = clr;
 	pen_.thickness = thick;
 	
-	SelectObject(hdc_, CreatePen(PS_SOLID, thick, toWindowsColor(clr)));
+	DeleteObject(SelectObject(hdc_, CreatePen(PS_SOLID, thick, toWindowsColor(clr))));
 	
 	return a1;
 }
@@ -113,7 +113,7 @@ Brush Bufer::brushSet(Color clr) {
 	
 	brush_ = clr;
 	
-	SelectObject(hdc_, CreateSolidBrush(toWindowsColor(clr)));
+	DeleteObject(SelectObject(hdc_, CreateSolidBrush(toWindowsColor(clr))));
 	
 	return a1;
 }
