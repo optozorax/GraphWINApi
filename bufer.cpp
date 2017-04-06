@@ -161,8 +161,8 @@ void Bufer::rectDraw(Point a, Point b) {
 	PatBlt(hdc_, a[0], a[1], b[0]-a[0], b[1]-a[1], PATCOPY);
 	lineDraw(a, Point(b[0], a[1]));
 	lineDraw(a, Point(a[0], b[1]));
-	lineDraw(b, Point(b[0], a[1]));
-	lineDraw(b, Point(a[0], b[1]));
+	lineDraw(b, Point(b[0], a[1]-1));
+	lineDraw(b, Point(a[0]-1, b[1]));
 }
 
 void Bufer::circleDraw(Point c, int r) {
