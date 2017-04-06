@@ -54,6 +54,7 @@ public:
 	
 	/* Очистка буфера заданным цветом. */
 	void clear(Color = White);
+	void clearM(Color = White);
 	
 	/* Работа с рисующими устройствами. */
 	Pen penSet(Color, int = 1);

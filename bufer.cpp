@@ -83,6 +83,13 @@ void Bufer::drawAlphaTo(Bufer &a, int x, int y, int width, int height) {
 }
 
 void Bufer::clear(Color cls) {
+	Color oldBrush = brush_;
+	brushSet(cls);
+	PatBlt(hdc_, 0, 0, sizex, sizey, PATCOPY);
+	brushSet(brush_);
+}
+
+void Bufer::clearM(Color cls) {
 	for (int x = 0; x<sizex; x++) {
 		for (int y = 0; y<sizey; y++) {
 			operator[](Point(x, y)) = cls.clrref;
