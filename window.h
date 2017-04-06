@@ -70,6 +70,8 @@ public:
 	void fullscreen(bool = true);
 	void taskbarProgress(double);
 	void taskbarColor(TaskbarColor = Loading);
+
+	unsigned long timeGet(void);
 	
 	bool isKeyDown(int);
 	
@@ -80,7 +82,5 @@ public:
 	friend void WindowLife::createStyle(WindowType&, DWORD&, DWORD&);
 	friend void WindowLife::taskbarRegister(Window*, UINT, HWND);
 };
-
-#define __WINDOWTEST
 
 }
