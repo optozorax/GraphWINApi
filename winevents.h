@@ -36,11 +36,10 @@ public:
 		L_DBL, R_DBL, M_DBL, X1_DBL, X2_DBL,
 		L_DOWN, R_DOWN, M_DOWN, X1_DOWN, X2_DOWN,
 		L_UP, R_UP, M_UP, X1_UP, X2_UP,
-		Leave, Wheel, Move
+		Wheel, Move
 	};
 	void (*size)(int, int);
 	void (*sizing)(long&, long&, long&, long&, SizingType);
-	void (*move)(int, int);
 	void (*moving)(long&, long&, long&, long&);
 	void (*keyboard)(int, bool);
 	void (*mouse)(int, int,  MouseType, int);

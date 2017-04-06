@@ -17,7 +17,6 @@ LRESULT CALLBACK gwapi::WindowLife::currentWndProc(HWND hwnd, UINT msg, WPARAM w
 	};break;case WM_ACTIVATE:{ return activate(This, hwnd, wParam, lParam);			
 	};break;case WM_COMMAND:{ return comand(This, hwnd, wParam, lParam);
 
-	};break;case WM_MOVE:{ return move(This, hwnd, wParam, lParam);
 	};break;case WM_MOVING:{ return moving(This, hwnd, wParam, lParam);
 
 	};break;case WM_SIZE:{ return size(This, hwnd, wParam, lParam);
@@ -46,7 +45,6 @@ LRESULT CALLBACK gwapi::WindowLife::currentWndProc(HWND hwnd, UINT msg, WPARAM w
 
 	};break;case WM_MOUSEMOVE:{ return mouse(This, hwnd, wParam, lParam, WinEvents::Move);
 	};break;case WM_MOUSEWHEEL:{ return mouse(This, hwnd, wParam, lParam, WinEvents::Wheel);
-	};break;case WM_CAPTURECHANGED:{ return mouse(This, hwnd, wParam, lParam, WinEvents::Leave);
 
 	};break; default:
 		return DefWindowProc( hwnd, msg, wParam, lParam );
@@ -217,17 +215,6 @@ LRESULT gwapi::WindowLife::activate(Window *This, HWND &hwnd, WPARAM &wParam, LP
 	return 0;
 }
 
-LRESULT gwapi::WindowLife::move(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam) {
-	/* Сообщение посылается при изменении положения окна. */
-	int xPos = (int) LOWORD(lParam);
-	int yPos = (int) HIWORD(lParam);
-
-	if (This->ev.move != NULL)
-		(*(This->ev.move))(xPos, yPos);
-
-	return 0;
-}
-
 LRESULT gwapi::WindowLife::size(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam) {
 	/* Сообщение посылается окну после того, как его размер изменился. */
 	int fwSizeType = (int) wParam;
@@ -333,8 +320,8 @@ LRESULT gwapi::WindowLife::mouse(Window *This, HWND &hwnd, WPARAM &wParam, LPARA
 	int yPos = GET_Y_LPARAM(lParam); 
 	int wheel = 0;
 	
-	if (mtype == gwapi::WinEvents::X1_DBL && 
-		mtype == gwapi::WinEvents::X1_DOWN && 
+	if (mtype == gwapi::WinEvents::X1_DBL || 
+		mtype == gwapi::WinEvents::X1_DOWN ||
 		mtype == gwapi::WinEvents::X1_UP
 	) {
 		int fwButton = GET_XBUTTON_WPARAM (wParam);
@@ -351,9 +338,6 @@ LRESULT gwapi::WindowLife::mouse(Window *This, HWND &hwnd, WPARAM &wParam, LPARA
 				break;
 			}
 		}
-	} else if (mtype == gwapi::WinEvents::Leave) {
-		xPos = 0;
-		yPos = 0;
 	} else if (mtype == gwapi::WinEvents::Wheel) {
 		wheel = GET_WHEEL_DELTA_WPARAM(wParam);
 	}

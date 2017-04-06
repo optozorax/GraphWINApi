@@ -6,7 +6,6 @@ UINT gwapi::Window::wm_create_mess;
 gwapi::WinEvents::WinEvents() : 
 	size(NULL),
 	sizing(NULL),
-	move(NULL),
 	moving(NULL),
 	keyboard(NULL),
 	mouse(NULL),

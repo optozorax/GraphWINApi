@@ -25,7 +25,6 @@ LRESULT CALLBACK currentWndProc(HWND, UINT, WPARAM, LPARAM);
 void taskbarRegister(Window*, UINT, HWND);
 LRESULT getMinMaxInfo(Window*, HWND&, WPARAM&, LPARAM&);
 LRESULT activate(Window*, HWND&, WPARAM&, LPARAM&);
-LRESULT move(Window*, HWND&, WPARAM&, LPARAM&);
 LRESULT size(Window*, HWND&, WPARAM&, LPARAM&);
 LRESULT sizing(Window*, HWND&, WPARAM&, LPARAM&);
 LRESULT close(Window*, HWND&, WPARAM&, LPARAM&);
