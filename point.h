@@ -23,6 +23,8 @@ AnyPoint<T, n> operator-( AnyPoint<T, n> a,  AnyPoint<T, n> b);
 template<class T, int n> 
 AnyPoint<T, n> operator*( AnyPoint<T, n> a,  T b);
 template<class T, int n> 
+AnyPoint<T, n> operator/( AnyPoint<T, n> a,  T b);
+template<class T, int n> 
 bool operator!=( AnyPoint<T, n> a,  AnyPoint<T, n> b);
 template<class T, int n> 
 bool operator==( AnyPoint<T, n> a,  AnyPoint<T, n> b);
@@ -96,6 +98,15 @@ template<class T, int n>
 AnyPoint<T, n> operator*(AnyPoint<T, n> a, T b) {
 	for (int i = 0; i < n; i++) {
 		a[i] *= b;
+	}
+
+	return a;
+}
+
+template<class T, int n>
+AnyPoint<T, n> operator/(AnyPoint<T, n> a, T b) {
+	for (int i = 0; i < n; i++) {
+		a[i] /= b;
 	}
 
 	return a;
