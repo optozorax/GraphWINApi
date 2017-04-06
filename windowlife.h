@@ -1,7 +1,14 @@
 #pragma once
 
+/* Для того, чтобы работалы современные функции. */
+#define _WIN32_IE 0x301
+#define WINVER 0x0500
+#define _WIN32_WINNT 0x0501
+
 #include <map>
 #include <windows.h>
+#include <Windowsx.h>
+#include "winevents.h"
 using namespace std;
 
 namespace gwapi {
@@ -13,10 +20,9 @@ namespace WindowLife {
 
 extern map<HWND, Window*> WindowMap_;
 
-enum SizingType {Bottom, BottomLeft, BottomRight, Left, Right, Top, TopLeft, TopRight};
-
+/* Блок функций, связанных с сообщениями окна. */
 LRESULT CALLBACK currentWndProc(HWND, UINT, WPARAM, LPARAM);
-void taskbarRegister(Window*, UINT);
+void taskbarRegister(Window*, UINT, HWND);
 LRESULT getMinMaxInfo(Window*, HWND&, WPARAM&, LPARAM&);
 LRESULT activate(Window*, HWND&, WPARAM&, LPARAM&);
 LRESULT move(Window*, HWND&, WPARAM&, LPARAM&);
@@ -26,7 +32,11 @@ LRESULT close(Window*, HWND&, WPARAM&, LPARAM&);
 LRESULT create(Window*, HWND&, WPARAM&, LPARAM&);
 LRESULT paint(Window*, HWND&, WPARAM&, LPARAM&);
 LRESULT comand(Window*, HWND&, WPARAM&, LPARAM&);
+LRESULT moving(Window*, HWND&, WPARAM&, LPARAM&);
+LRESULT mouse(Window*, HWND&, WPARAM&, LPARAM&, WinEvents::MouseType);
+LRESULT keyboard(Window*, HWND&, WPARAM&, LPARAM&, BOOL);
 
+/* Блок функций, связанных с созданием окна. */
 DWORD WINAPI windowMainThread(LPVOID);
 string registerClass(WindowType&);
 void createStyle(WindowType&, DWORD&, DWORD&);

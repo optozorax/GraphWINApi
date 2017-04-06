@@ -6,13 +6,13 @@
 #define _WIN32_WINNT 0x0501
 
 #include <string>
-//#include <map>
 #include <windows.h>
 #include <objbase.h>
 //#include "vlc_windows_interfaces.h"
 #include <Shobjidl.h>
 #include "bufer.h"
 #include "windowlife.h"
+#include "winevents.h"
 
 using namespace std;
 
@@ -46,32 +46,15 @@ class Window {
 	HDC hdc_;
 	Bufer current_;
 
-	UINT wm_create_mess;
 	LONG_PTR WS_Style;
-	ITaskbarList3 *pTaskbarList;
+	static UINT wm_create_mess;
+	static ITaskbarList3 *pTaskbarList;
 public:
-	// TODO создать отдельный класс с событиями окна
-		// http://vsokovikov.narod.ru/New_MSDN_API/Window/notify_wm_moving.htm
-	// TODO добавить событие на двойной клик
-	// TODO добавить событие на мышку
-		// http://www.vsokovikov.narod.ru/New_MSDN_API/Mouse_input/notify_mouse.htm
-	// TODO добавить собыите на клавиатуру
-		// http://vsokovikov.narod.ru/New_MSDN_API/Keyb_input/msg_wm_sethotkey.htm
-		// http://vsokovikov.narod.ru/New_MSDN_API/Keyb_input/notify_wm_keydown.htm
-		// http://vsokovikov.narod.ru/New_MSDN_API/Keyb_input/notify_wm_keyup.htm
-	// TODO добавить событие на таскбар
-	void (*funcSized)(int, int);
-	void (*funcSizing)(long&, long&, long&, long&, int);
-	void (*funcMove)(int, int);
-	void (*funcActivate)(bool, bool);
-	void (*funcDestroy)(void);
-
-	// TODO сделать интерфейс для таскбара
+	WinEvents ev;
+	Bufer canvas;
 
 	Point MinSize;
 	Point MaxSize;
-
-	Bufer canvas;
 	
 	Window(WindowType = WindowType());
 	~Window();
@@ -83,17 +66,19 @@ public:
 	void captionSet(string);
 	void positionSet(Point);
 	
+	enum TaskbarColor{Loading, Green, Yellow, Red, Blink};
 	void fullscreen(bool = true);
+	void taskbarProgress(double);
+	void taskbarColor(TaskbarColor = Loading);
 	
-	bool isKeyDown(int); /* ?????? */
+	bool isKeyDown(int);
 	
 	//# Когда-нибудь сделать интерфейс для работы с потоками, возможно отдельный класс. #//
-	//# Когда-нибудь сделать интерфейс для назначения функций на события. #//
 
 	friend LRESULT WindowLife::create(Window*, HWND&, WPARAM&, LPARAM&);
 	friend DWORD WINAPI WindowLife::windowMainThread(LPVOID);
 	friend void WindowLife::createStyle(WindowType&, DWORD&, DWORD&);
-	friend void WindowLife::taskbarRegister(Window*, UINT);
+	friend void WindowLife::taskbarRegister(Window*, UINT, HWND);
 };
 
 #define __WINDOWTEST

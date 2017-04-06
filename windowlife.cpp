@@ -8,19 +8,46 @@ LRESULT CALLBACK gwapi::WindowLife::currentWndProc(HWND hwnd, UINT msg, WPARAM w
 	extern map<HWND, Window*> WindowMap_;
 	Window* This = WindowMap_[hwnd];
 
-	taskbarRegister(This, msg);
+	taskbarRegister(This, msg, hwnd);
 
 	switch ( msg ) {
 	case WM_CREATE:{ return create(This, hwnd, wParam, lParam);
-	};break;case WM_ACTIVATE:{ return activate(This, hwnd, wParam, lParam);			
 	};break;case WM_CLOSE:{	return close(This, hwnd, wParam, lParam);
-	};break;case WM_GETMINMAXINFO:{	return getMinMaxInfo(This, hwnd, wParam, lParam);
-	};break;case WM_MOVE:{ return move(This, hwnd, wParam, lParam);
 	};break;case WM_PAINT:{	return paint(This, hwnd, wParam, lParam);
+	};break;case WM_ACTIVATE:{ return activate(This, hwnd, wParam, lParam);			
+	};break;case WM_COMMAND:{ return comand(This, hwnd, wParam, lParam);
+
+	};break;case WM_MOVE:{ return move(This, hwnd, wParam, lParam);
+	};break;case WM_MOVING:{ return moving(This, hwnd, wParam, lParam);
+
 	};break;case WM_SIZE:{ return size(This, hwnd, wParam, lParam);
 	};break;case WM_SIZING:{ return sizing(This, hwnd, wParam, lParam);
-	};break;case WM_COMMAND:{ return comand(This, hwnd, wParam, lParam);
-	//};break;case WM_DESTROY:{ PostQuitMessage(0); return 0;
+	};break;case WM_GETMINMAXINFO:{	return getMinMaxInfo(This, hwnd, wParam, lParam);
+
+	};break;case WM_KEYDOWN:{	return keyboard(This, hwnd, wParam, lParam, FALSE);
+	};break;case WM_KEYUP:{	return keyboard(This, hwnd, wParam, lParam, TRUE);
+
+	/* Блок для сообщений мышки. */
+	};break;case WM_LBUTTONDBLCLK:{ return mouse(This, hwnd, wParam, lParam, WinEvents::L_DBL);
+	};break;case WM_LBUTTONDOWN:{ return mouse(This, hwnd, wParam, lParam, WinEvents::L_DOWN);
+	};break;case WM_LBUTTONUP:{ return mouse(This, hwnd, wParam, lParam, WinEvents::L_UP);
+
+	};break;case WM_MBUTTONDBLCLK:{ return mouse(This, hwnd, wParam, lParam, WinEvents::M_DBL);
+	};break;case WM_MBUTTONDOWN:{ return mouse(This, hwnd, wParam, lParam, WinEvents::M_DOWN);
+	};break;case WM_MBUTTONUP:{ return mouse(This, hwnd, wParam, lParam, WinEvents::M_UP);
+
+	};break;case WM_RBUTTONDBLCLK:{ return mouse(This, hwnd, wParam, lParam, WinEvents::R_DBL);
+	};break;case WM_RBUTTONDOWN:{ return mouse(This, hwnd, wParam, lParam, WinEvents::R_DOWN);
+	};break;case WM_RBUTTONUP:{ return mouse(This, hwnd, wParam, lParam, WinEvents::R_UP);
+
+	};break;case WM_XBUTTONDBLCLK:{ return mouse(This, hwnd, wParam, lParam, WinEvents::X1_DBL);
+	};break;case WM_XBUTTONDOWN:{ return mouse(This, hwnd, wParam, lParam, WinEvents::X1_DOWN);
+	};break;case WM_XBUTTONUP:{ return mouse(This, hwnd, wParam, lParam, WinEvents::X1_UP);
+
+	};break;case WM_MOUSEMOVE:{ return mouse(This, hwnd, wParam, lParam, WinEvents::Move);
+	};break;case WM_MOUSEWHEEL:{ return mouse(This, hwnd, wParam, lParam, WinEvents::Wheel);
+	};break;case WM_CAPTURECHANGED:{ return mouse(This, hwnd, wParam, lParam, WinEvents::Leave);
+
 	};break; default:
 		return DefWindowProc( hwnd, msg, wParam, lParam );
 	};
@@ -145,7 +172,7 @@ void gwapi::WindowLife::msgCycle(void) {
 	}
 }
 
-void gwapi::WindowLife::taskbarRegister(Window *This, UINT msg) {
+void gwapi::WindowLife::taskbarRegister(Window *This, UINT msg, HWND hwnd) {
 	if (This != NULL) {
 		if (msg == This->wm_create_mess) {
 			HRESULT const Status = CoCreateInstance(
@@ -155,6 +182,8 @@ void gwapi::WindowLife::taskbarRegister(Window *This, UINT msg) {
 				IID_ITaskbarList3,
 				(void **)&(This->pTaskbarList)
 			);
+
+			This->pTaskbarList->HrInit();
 
 			if (!SUCCEEDED(Status)) {
 				/* Обработка ошибки. */
@@ -182,8 +211,8 @@ LRESULT gwapi::WindowLife::activate(Window *This, HWND &hwnd, WPARAM &wParam, LP
 	bool fActive = !(LOWORD(wParam) == WA_INACTIVE);
 	bool fMinimized = (BOOL) HIWORD(wParam);
 
-	if (This->funcActivate != NULL)
-		(*(This->funcActivate))(fActive, fMinimized);
+	if (This->ev.activate != NULL)
+		(*(This->ev.activate))(fActive, fMinimized);
 
 	return 0;
 }
@@ -193,8 +222,8 @@ LRESULT gwapi::WindowLife::move(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM
 	int xPos = (int) LOWORD(lParam);
 	int yPos = (int) HIWORD(lParam);
 
-	if (This->funcMove != NULL)
-		(*(This->funcMove))(xPos, yPos);
+	if (This->ev.move != NULL)
+		(*(This->ev.move))(xPos, yPos);
 
 	return 0;
 }
@@ -206,8 +235,8 @@ LRESULT gwapi::WindowLife::size(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM
 	int nHeight = HIWORD(lParam); 
 
 	if (fwSizeType != SIZE_MINIMIZED) {
-		if (This->funcSized != NULL)
-			(*(This->funcSized))(nWidth, nHeight);
+		if (This->ev.size != NULL)
+			(*(This->ev.size))(nWidth, nHeight);
 	}
 	return 0;
 }
@@ -217,27 +246,27 @@ LRESULT gwapi::WindowLife::sizing(Window *This, HWND &hwnd, WPARAM &wParam, LPAR
 	int fwSide = wParam;
 	RECT* lprc = (LPRECT) lParam;
 
-	SizingType szType;
+	WinEvents::SizingType szType;
 	switch (fwSide) {
-	case (WMSZ_BOTTOM): szType = Bottom; break;
-	case (WMSZ_BOTTOMLEFT): szType = BottomLeft; break;
-	case (WMSZ_BOTTOMRIGHT): szType = BottomRight; break;
-	case (WMSZ_LEFT): szType = Left; break;
-	case (WMSZ_RIGHT): szType = Right; break;
-	case (WMSZ_TOP): szType = Top; break;
-	case (WMSZ_TOPLEFT): szType = TopLeft; break;
-	case (WMSZ_TOPRIGHT): szType = TopRight; break;
+	case (WMSZ_BOTTOM): szType = WinEvents::Bottom; break;
+	case (WMSZ_BOTTOMLEFT): szType = WinEvents::BottomLeft; break;
+	case (WMSZ_BOTTOMRIGHT): szType = WinEvents::BottomRight; break;
+	case (WMSZ_LEFT): szType = WinEvents::Left; break;
+	case (WMSZ_RIGHT): szType = WinEvents::Right; break;
+	case (WMSZ_TOP): szType = WinEvents::Top; break;
+	case (WMSZ_TOPLEFT): szType = WinEvents::TopLeft; break;
+	case (WMSZ_TOPRIGHT): szType = WinEvents::TopRight; break;
 	}
 
-	if (This->funcSizing != NULL)
-		(*(This->funcSizing))(lprc->left, lprc->top, lprc->right, lprc->bottom, szType);
+	if (This->ev.sizing != NULL)
+		(*(This->ev.sizing))(lprc->left, lprc->top, lprc->right, lprc->bottom, szType);
 	return TRUE;
 }
 
 LRESULT gwapi::WindowLife::close(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam) {
 	/* Сигнал, означающий, что прикладная программа должна завершить свою работу. */
-	if (This->funcDestroy != NULL)
-		(*(This->funcDestroy))();
+	if (This->ev.close != NULL)
+		(*(This->ev.close))();
 
 	DestroyWindow( hwnd );
 	return 0;
@@ -259,8 +288,10 @@ LRESULT gwapi::WindowLife::create(Window *This, HWND &hwnd, WPARAM &wParam, LPAR
 	This->sizeSet(curWin.size);
 	This->current_.hdc_ = This->hdc_;
 
-	CoInitialize(NULL);
-	This->wm_create_mess = RegisterWindowMessage("TaskbarButtonCreated");
+	if (This->pTaskbarList == NULL) {
+		CoInitialize(NULL);
+		This->wm_create_mess = RegisterWindowMessage("TaskbarButtonCreated");
+	} 
 
 	delete (WindowType*) ((CREATESTRUCT*)lParam)->lpCreateParams;
 
@@ -283,8 +314,58 @@ LRESULT gwapi::WindowLife::paint(Window *This, HWND &hwnd, WPARAM &wParam, LPARA
 
 LRESULT gwapi::WindowLife::comand(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam) {
 	/* Сообщение отправляется тогда, когда пользователь выбирает командный пункт из меню или происходит нажатие на кнопку и т.д. */
-	// TODO сделать чтобы можно было на этот случай назначить функцию
+	// TODO
 	switch ( LOWORD(wParam) ) {
 	}; 
+	return 0;
+}
+
+LRESULT gwapi::WindowLife::moving(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam) {
+	RECT* lprc = (LPRECT) lParam;
+	if (This->ev.moving != NULL)
+		(*(This->ev.moving))(lprc->left, lprc->top, lprc->right, lprc->bottom);
+	return TRUE;
+}
+
+LRESULT gwapi::WindowLife::mouse(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam, WinEvents::MouseType mtype) {
+	/* Обрабатывает данные с мышки. */
+	int xPos = GET_X_LPARAM(lParam); 
+	int yPos = GET_Y_LPARAM(lParam); 
+	int wheel = 0;
+	
+	if (mtype == gwapi::WinEvents::X1_DBL && 
+		mtype == gwapi::WinEvents::X1_DOWN && 
+		mtype == gwapi::WinEvents::X1_UP
+	) {
+		int fwButton = GET_XBUTTON_WPARAM (wParam);
+		if (fwButton == XBUTTON2) {
+			switch (mtype) {
+			case gwapi::WinEvents::X1_DBL:
+				mtype = gwapi::WinEvents::X2_DBL;
+				break;
+			case gwapi::WinEvents::X1_DOWN:
+				mtype = gwapi::WinEvents::X2_DOWN;
+				break;
+			case gwapi::WinEvents::X1_UP:
+				mtype = gwapi::WinEvents::X2_UP;
+				break;
+			}
+		}
+	} else if (mtype == gwapi::WinEvents::Leave) {
+		xPos = 0;
+		yPos = 0;
+	} else if (mtype == gwapi::WinEvents::Wheel) {
+		wheel = GET_WHEEL_DELTA_WPARAM(wParam);
+	}
+
+	if (This->ev.mouse != NULL)
+		(*(This->ev.mouse))(xPos, yPos, mtype, wheel);
+
+	return 0;
+}
+
+LRESULT gwapi::WindowLife::keyboard(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam, BOOL state) {
+	if (This->ev.keyboard != NULL)
+		(*(This->ev.keyboard))((int) wParam, state);
 	return 0;
 }

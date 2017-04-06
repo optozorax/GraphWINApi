@@ -1,5 +1,20 @@
 #include "window.h"
 
+ITaskbarList3 *gwapi::Window::pTaskbarList;
+UINT gwapi::Window::wm_create_mess;
+
+gwapi::WinEvents::WinEvents() : 
+	size(NULL),
+	sizing(NULL),
+	move(NULL),
+	moving(NULL),
+	keyboard(NULL),
+	mouse(NULL),
+	activate(NULL),
+	close(NULL) {
+}
+
+
 gwapi::WindowType::WindowType() : 
 		position(Point(0,0)), 
 		size(Point(300,300)),
@@ -11,15 +26,41 @@ gwapi::WindowType::WindowType() :
 	flags = {};
 }
 
-gwapi::Window::Window(WindowType type) : 
+void gwapi::Window::taskbarProgress(double x) {
+	pTaskbarList->SetProgressValue(hwnd_, (DWORD) 100*x, (DWORD) 100); 
+}
+
+void gwapi::Window::taskbarColor(TaskbarColor clr) {
+	switch (clr) {
+	case gwapi::Window::Loading:
+		pTaskbarList->SetProgressState(hwnd_, TBPF_INDETERMINATE); 
+		break;
+	case gwapi::Window::Green:
+		pTaskbarList->SetProgressState(hwnd_, TBPF_NORMAL); 
+		break;
+	case gwapi::Window::Yellow:
+		pTaskbarList->SetProgressState(hwnd_, TBPF_PAUSED); 
+		break;
+	case gwapi::Window::Red:
+		pTaskbarList->SetProgressState(hwnd_, TBPF_ERROR); 
+		break;
+	case gwapi::Window::Blink:
+		FLASHWINFO pfwi;
+		ZeroMemory( &pfwi, sizeof( FLASHWINFO ) );
+		pfwi.cbSize = sizeof( FLASHWINFO );
+		pfwi.hwnd = hwnd_;
+		pfwi.dwFlags = FLASHW_TIMERNOFG | FLASHW_TRAY;
+		pfwi.uCount = 5;
+		pfwi.dwTimeout = 300;
+		FlashWindowEx( &pfwi );
+		break;
+	}
+}
+
+gwapi::Window::Window(WindowType type) :
 	canvas(type.size[0]+50, type.size[0]+50), 
 	MinSize(type.minSize), 
-	MaxSize(type.maxSize), 
-	funcSized(NULL), 
-	funcSizing(NULL), 
-	funcMove(NULL), 
-	funcActivate(NULL),
-	funcDestroy(NULL)
+	MaxSize(type.maxSize)
 {
 	type.This = this;
 	WindowType *type1 = new WindowType; 
@@ -65,13 +106,13 @@ void gwapi::Window::positionSet(Point ps) {
 }
 
 void gwapi::Window::fullscreen(bool state) {
-	static BOOL MaximizeState = FALSE;
 	static WINDOWPLACEMENT wnplc;
+	wnplc.length = sizeof(WINDOWPLACEMENT);
 	static bool nowState = false;
+
 	if (state) {
 		if (!nowState) {
 			pTaskbarList->MarkFullscreenWindow(hwnd_, TRUE);
-			wnplc.length = sizeof(WINDOWPLACEMENT);
 			GetWindowPlacement(hwnd_, &wnplc);
 			SetWindowLongPtr(hwnd_, GWL_STYLE, WS_POPUP | (WS_Style & (WS_VSCROLL | WS_HSCROLL)));
 			UpdateWindow(hwnd_);
@@ -91,9 +132,12 @@ void gwapi::Window::fullscreen(bool state) {
 	};
 }
 
-bool gwapi::Window::isKeyDown(int) {
-	// TODO
-	return false;
+bool gwapi::Window::isKeyDown(int key) {
+	/* Если ввести символы A..Z, a..z, и другие, которые 
+	явно отображаются на клавиатуре, то функция проверит
+	их на нажатия. Иначе надо указывать коды виртуальных 
+	клавиш из WinAPI. */
+	return (-(GetKeyState(key) >> 8));
 }
 
 #ifdef __WINDOWTEST
@@ -115,7 +159,11 @@ int main() {
 	ctype.position = btype.position + Point(btype.size[0]+20,0);
 	ctype.style = gwapi::WindowType::Caption;
 
-	gwapi::Window a(atype), b(btype), c(ctype);
+	gwapi::Window a(atype);
+	system("pause");
+	gwapi::Window b(btype);
+	system("pause");
+	gwapi::Window c(ctype);
 	
 	a.canvas.penSet(gwapi::rgb(255,0,0), 3);
 	a.canvas.clear();
