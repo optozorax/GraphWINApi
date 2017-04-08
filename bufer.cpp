@@ -2,6 +2,17 @@
 
 namespace gwapi{
 
+gwapi::StyleText::StyleText(int size1, std::string name1, int thick1, bool italic1, bool underline1, bool strikedOut1, int symbolSlope1, int textSlope1) :
+	size(size1),
+	name(name1),
+	symbolSlope(symbolSlope1),
+	textSlope(textSlope1),
+	thick(thick1),
+	italic(italic1),
+	underline(underline1),
+	strikedOut(strikedOut1) {
+}
+
 Bufer::Bufer(int x, int y) : sizex(x), sizey(y) {
 	VOID *pvBits;
 
@@ -18,12 +29,50 @@ Bufer::Bufer(int x, int y) : sizex(x), sizey(y) {
 	
 	hdc_ = CreateCompatibleDC(NULL);
 	hbmp_ = CreateDIBSection(hdc_, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
+
+	SetGraphicsMode(hdc_, GM_ADVANCED);
 	
 	mas_ = (UINT32*) pvBits;
 	SelectObject(hdc_, hbmp_);
 
-	brushSet(White);
-	penSet(Black);
+	clear();
+	brushSet();
+	penSet();
+	textStyle(StyleText());
+}
+
+void gwapi::Bufer::resize(int x, int y) {
+	DeleteObject(hbmp_);
+	DeleteDC(hdc_);
+
+	sizex = x;
+	sizey = y;
+
+	VOID *pvBits;
+
+	/* Структура для того, чтобы связать картинку с массивом. */
+	BITMAPINFO bmi;
+	ZeroMemory(&bmi, sizeof(BITMAPINFO));
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER); 
+	bmi.bmiHeader.biWidth = x;
+	bmi.bmiHeader.biHeight = -y;
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 32;
+	bmi.bmiHeader.biCompression = BI_RGB;
+	bmi.bmiHeader.biSizeImage = x * y * 4;
+
+	hdc_ = CreateCompatibleDC(NULL);
+	hbmp_ = CreateDIBSection(hdc_, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
+
+	SetGraphicsMode(hdc_, GM_ADVANCED);
+
+	mas_ = (UINT32*) pvBits;
+	SelectObject(hdc_, hbmp_);
+
+	clear();
+	brushSet();
+	penSet();
+	textStyle(StyleText());
 }
 
 Bufer::Bufer(HDC hdc) {
@@ -83,27 +132,30 @@ void Bufer::drawAlphaTo(Bufer &a, int x, int y, int width, int height) {
 }
 
 void Bufer::clear(Color cls) {
-	Color oldBrush = brush_;
-	brushSet(cls);
-	PatBlt(hdc_, 0, 0, sizex, sizey, PATCOPY);
-	brushSet(brush_);
-}
-
-void Bufer::clearM(Color cls) {
-	for (int x = 0; x<sizex; x++) {
-		for (int y = 0; y<sizey; y++) {
-			operator[](Point(x, y)) = cls.clrref;
+	if (cls.m[3] == 255) {
+		Color oldBrush = brush_;
+		brushSet(cls);
+		PatBlt(hdc_, 0, 0, sizex, sizey, PATCOPY);
+		brushSet(oldBrush);
+	} else {
+		DWORD clr1 = cls.clrref;
+		for (register int i = 0; i < sizey; i++) {
+			for (register int j = 0; j < sizex; j++) {
+				operator[](Point(j, i)) = clr1;
+			}
 		}
 	}
 }
 
-Pen Bufer::penSet(Color clr, int thick) {
+Pen Bufer::penSet(Color clr, double thick) {
 	Pen a1 = pen_;
 	
 	pen_.color = clr;
 	pen_.thickness = thick;
 	
-	DeleteObject(SelectObject(hdc_, CreatePen(PS_SOLID, thick, toWindowsColor(clr))));
+	DeleteObject(SelectObject(hdc_, CreatePen(PS_SOLID, (int) thick, toWindowsColor(clr))));
+
+	SetTextColor(hdc_, toWindowsColor(clr));
 	
 	return a1;
 }
@@ -118,41 +170,61 @@ Brush Bufer::brushSet(Color clr) {
 	return a1;
 }
 
-void Bufer::textOut(Point x, string str, TextWriteStyle stl) {
-	// TODO сделать для разных стилей.
-	// TODO сделать чтобы работало для переносов строк.
-	// GetTextExtentPoint32 - это поможет
-	TextOut(hdc_, x[0], x[1], (LPCSTR)str.c_str(), strlen(str.c_str())); 
+void Bufer::textOut(Point x, std::string str, TextWriteStyle stl) {
+	if (stl == Center) x = x - textSize(str)/2;
+	std::string first;
+	do {
+		first = str.substr(0, str.find("\n"));
+		TextOut(hdc_, x[0], x[1], first.c_str(), first.size()); 
+		x = x + Point(0, textSize(first)[1]);
+		str.erase(0, first.size()+1);
+	} while (str.size() != 0);
 }
 
-void Bufer::textStyle(int size, string name) {
+Point gwapi::Bufer::textSize(std::string str) {
+	SIZE *sz = new SIZE;
+	std::string first;
+	Point x(0,0);
+
+	do {
+		first = str.substr(0, str.find("\n"));
+		GetTextExtentPoint32(hdc_, first.c_str(), first.size(), sz);
+		x = Point(max(x[0], sz->cx), max(x[1], sz->cy));
+		str.erase(0, first.size()+1);
+	} while (str.size() != 0);
+	delete sz;
+
+	return x;
+}
+
+void Bufer::textStyle(StyleText stl) {
 	// TODO Понять: надо ли через эту функцию получать такие параметры, как: толщина, курсив и т.д. что задается через структуру
 	LOGFONT font;
-	font.lfHeight 			= -size; /* Высота шрифта. */ 
+	font.lfHeight 			= -stl.size; /* Высота шрифта. */ 
 	font.lfWidth 			= 0; /* Ширина символов в шрифте. */
-	font.lfEscapement 		= 0; /* Угол наклона относительно горизонта. */ 
-	font.lfOrientation 		= 0; /* Угол между основной линией каждого символа и осью X устройства. */ 
-	font.lfWeight 			= 0; /* Толщина шрифта в диапазоне от 0 до 1000. */ 
-	font.lfItalic 			= FALSE; /* Курсивный шрифт. */
-	font.lfUnderline 		= FALSE; /* Подчеркнутый шрифт. */
-	font.lfStrikeOut 		= FALSE; /* Зачеркнутый шрифт. */
+	font.lfEscapement 		= stl.textSlope; /* Угол наклона относительно горизонта. */ 
+	font.lfOrientation 		= stl.symbolSlope; /* Угол между основной линией каждого символа и осью X устройства. */ 
+	font.lfWeight 			= stl.thick*100; /* Толщина шрифта в диапазоне от 0 до 1000. */ 
+	font.lfItalic 			= stl.italic; /* Курсивный шрифт. */
+	font.lfUnderline 		= stl.underline; /* Подчеркнутый шрифт. */
+	font.lfStrikeOut 		= stl.strikedOut; /* Зачеркнутый шрифт. */
 	font.lfCharSet 			= RUSSIAN_CHARSET; /* Набор символов. */
-	font.lfOutPrecision 	= 0; /* Точность вывода. */
+	font.lfOutPrecision 	= OUT_STROKE_PRECIS; /* Точность вывода. */
 	font.lfClipPrecision 	= CLIP_DEFAULT_PRECIS; /* Точность отсечения. */
-	font.lfQuality 			= PROOF_QUALITY; /* Качество вывода. */
+	font.lfQuality 			= ANTIALIASED_QUALITY; /* Качество вывода. */
 	font.lfPitchAndFamily 	= 0; /* Ширина символов и семейство шрифта. */
 
 	/* Название шрифта. */
-	for (int i = 0; i < name.size(); i++) {
-		font.lfFaceName[i] = name[i];
+	for (int i = 0; i < stl.name.size(); i++) {
+		font.lfFaceName[i] = stl.name[i];
 	}
-	for (int i = name.size(); i < 32; i++) {
+	for (int i = stl.name.size(); i < 32; i++) {
 		font.lfFaceName[i] = 0;
 	}
 
 	/* Применение шрифта к дескриптору окна. */
 	HFONT hfont = CreateFontIndirect(&font);
-	SelectObject(hdc_, hfont);
+	DeleteObject(SelectObject(hdc_, hfont));
 }
 
 void Bufer::pixelDraw(Point x, Color c) {
@@ -181,6 +253,15 @@ void Bufer::lineDraw(Point a, Point b) {
 	LineTo(hdc_, b[0], b[1]);
 }
 
+void gwapi::Bufer::polyDraw(std::vector<Point> mas) {
+	POINT *mas1 = new POINT[mas.size()];
+	for (int i = 0; i < mas.size(); i++) {
+		mas1[i] = {mas[i][0], mas[i][1]};
+	}
+	Polyline(hdc_, mas1, mas.size());
+	delete mas1;
+}
+
 inline UINT32& Bufer::operator[](Point a) {
 	return mas_[a[0] + sizey*a[1]];
 }
@@ -194,7 +275,7 @@ UINT32& Bufer::pixelGet(Point a) {
 	}
 }
 
-void Bufer::bezierDraw(vector<Point>, BezierStyle) {
+void Bufer::bezierDraw(std::vector<Point>, BezierStyle) {
 	// TODO реализовать
 	// Последовательность работы:
 	//		Рассчитать длину ломаной по точкам.
@@ -236,6 +317,13 @@ void gwapi::Bufer::lineDraw(point2, point2) {
 	//			Аналитически рассчитать формулы для рассчета идеальной площади которую линия занимает в пикселе.
 	//		В будущем можно будет рассмотреть все эти методы и сравнить качество картинки и скорость работы.
 	//		И уже в итоговый вариант войдет оптимальный по скорости и качеству.
+}
+
+void gwapi::Bufer::polyDraw(std::vector<point2> mas) {
+	// TODO реализовать
+	// Для того, чтобы нарисовать многоугольник надо использовать метод XOR или другие.
+	// Прозрачность будет рассматриваться точно так же, как и в верхнем методе.
+	// Это будет одно из самых сложных.
 }
 
 }

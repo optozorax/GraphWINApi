@@ -7,8 +7,6 @@
 #include "color.h"
 #include "point.h"
 
-using namespace std;
-
 namespace gwapi{
 
 /* Классы исключений: */
@@ -21,7 +19,7 @@ enum BezierStyle{Default, Pieces};
 /* Структуры данных для внутреннего представления. */
 struct Pen {
 	Color color;
-	int thickness;
+	double thickness;
 };
 typedef Color Brush;
 
@@ -30,6 +28,21 @@ class Window;
 namespace WindowLife {
 	LRESULT create(Window*, HWND&, WPARAM&, LPARAM&);
 }
+
+class StyleText {
+public:
+	int size;
+	std::string name;
+	int symbolSlope;
+	int textSlope;
+	int thick;
+
+	bool italic;
+	bool underline;
+	bool strikedOut;
+
+	StyleText(int = 14, std::string = "Consolas", int = 0, bool = false, bool = false, bool = false, int = 0, int = 0);
+};
 
 class Bufer {
 	HDC hdc_;
@@ -43,7 +56,10 @@ class Bufer {
 public:
 	Bufer(int = 1000, int = 1000);
 	Bufer(HDC);
+	//Bufer(const Bufer&);
 	~Bufer();
+
+	void resize(int = 1000, int = 1000);
 
 	// TODO подумать насчет копирования буфера
 	
@@ -54,15 +70,15 @@ public:
 	
 	/* Очистка буфера заданным цветом. */
 	void clear(Color = White);
-	void clearM(Color = White);
 	
 	/* Работа с рисующими устройствами. */
-	Pen penSet(Color, int = 1);
-	Brush brushSet(Color);
+	Pen penSet(Color = Black, double = 1);
+	Brush brushSet(Color = White);
 	
 	/* Работа с текстом. */
-	void textOut(Point, string, TextWriteStyle = LeftUp);
-	void textStyle(int = 14, string = "Consolas");
+	void textOut(Point, std::string, TextWriteStyle = LeftUp);
+	Point textSize(std::string);
+	void textStyle(StyleText);
 	
 	// TODO Понять: надо ли объединить два последующих блока, и различать их только дефайнами или флагами?
 
@@ -72,7 +88,8 @@ public:
 	void rectDraw(Point, Point);
 	void circleDraw(Point, int);
 	void lineDraw(Point, Point);
-	void bezierDraw(vector<Point>, BezierStyle = Default);
+	void polyDraw(std::vector<Point>);
+	void bezierDraw(std::vector<Point>, BezierStyle = Default);
 	
 	/* Примитивы на основе моей собственная реализация со сглаживанием и прозрачными цветами. */
 	/* Скорее всего очень медленно. */
@@ -80,7 +97,8 @@ public:
 	void rectDraw(point2, point2);
 	void circleDraw(point2, double);
 	void lineDraw(point2, point2);
-	void bezierDraw(vector<point2>, BezierStyle = Default);
+	void polyDraw(std::vector<point2>);
+	void bezierDraw(std::vector<point2>, BezierStyle = Default);
 
 	/* Обращение к соответствующему пикселю для изменения или чтения. */
 	UINT32& pixelGet(Point); // С проверкой выхода за границы
