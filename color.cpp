@@ -1,3 +1,4 @@
+#include <windows.h>
 #include "color.h"
 
 gwapi::Color gwapi::rgb(const int r, const int g, const int b) {
@@ -19,7 +20,7 @@ gwapi::Color gwapi::argb(const int a, const int r, const int g, const int b) {
 
 gwapi::Color gwapi::gray(const double a, const bool cycle) {
 	/* Ќачинаетс€ с черного, заканчиваетс€ белым. */
-	vector<Color> clrs(2);
+	std::vector<Color> clrs(2);
 	clrs[0] = Black;
 	clrs[1] = White;
 
@@ -29,7 +30,7 @@ gwapi::Color gwapi::gray(const double a, const bool cycle) {
 
 gwapi::Color gwapi::rainbow(const double a, const bool cycle) {
 	/* Ќачинаетс€ с красного, заканчиваетс€ фиолетовым. */
-	vector<Color> clrs(7);
+	std::vector<Color> clrs(7);
 	clrs[0] = rgb(255,0,0);
 	clrs[1] = rgb(255,128,0);
 	clrs[2] = rgb(255,255,0);
@@ -41,7 +42,7 @@ gwapi::Color gwapi::rainbow(const double a, const bool cycle) {
 	return gradient(a, cycle, clrs);
 };
 
-gwapi::Color gwapi::gradient(const double a, const bool cycle, const vector<Color> clrs) {
+gwapi::Color gwapi::gradient(const double a, const bool cycle, const std::vector<Color> clrs) {
 	register int n = clrs.size();
 	register double col = abs(a);
 	register double c;
