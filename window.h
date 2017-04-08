@@ -7,14 +7,10 @@
 
 #include <string>
 #include <windows.h>
-#include <objbase.h>
-//#include "vlc_windows_interfaces.h"
 #include <Shobjidl.h>
 #include "bufer.h"
 #include "windowlife.h"
 #include "winevents.h"
-
-using namespace std;
 
 namespace gwapi{
 
@@ -23,7 +19,7 @@ public:
 	Window *This;
 	Point position, size;
 	Point minSize, maxSize;
-	string caption;
+	std::string caption;
 
 	struct {
 		unsigned int dropShadow : 1;
@@ -63,7 +59,7 @@ public:
 	
 	void sizeSet(Point);
 	Point sizeGet(void);
-	void captionSet(string);
+	void captionSet(std::string);
 	void positionSet(Point);
 	
 	enum TaskbarColor{Loading, Green, Yellow, Red, Blink};

@@ -1,11 +1,14 @@
+#include <objbase.h>
+//#include "vlc_windows_interfaces.h"
+#include <Windowsx.h>
 #include "windowlife.h"
 #include "window.h"
 
-map<HWND, gwapi::Window*> gwapi::WindowLife::WindowMap_;
+std::map<HWND, gwapi::Window*> gwapi::WindowLife::WindowMap_;
 
 LRESULT CALLBACK gwapi::WindowLife::currentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	/* Указатель на объект, который относится к текущему окну. */
-	extern map<HWND, Window*> WindowMap_;
+	extern std::map<HWND, Window*> WindowMap_;
 	Window* This = WindowMap_[hwnd];
 
 	taskbarRegister(This, msg, hwnd);
@@ -55,7 +58,7 @@ DWORD WINAPI gwapi::WindowLife::windowMainThread(LPVOID typePointer) {
 	WindowType type = *((WindowType*) typePointer);
 	DWORD EX_Style = 0, WS_Style = 0;
 
-	string className = registerClass(type);
+	std::string className = registerClass(type);
 
 	createStyle(type, WS_Style, EX_Style);
 
@@ -109,7 +112,7 @@ void gwapi::WindowLife::createStyle(WindowType &type, DWORD &WS_Style, DWORD &EX
 	type.This->WS_Style = WS_Style;
 }
 
-string gwapi::WindowLife::registerClass(WindowType &type) {
+std::string gwapi::WindowLife::registerClass(WindowType &type) {
 	/* Создание структуры окна. */
 	WNDCLASSEX wc;
 	wc.cbSize = sizeof( WNDCLASSEX );
@@ -129,17 +132,17 @@ string gwapi::WindowLife::registerClass(WindowType &type) {
 
 	/* Для каждого окна классы уникальны */
 	long currentClassN = 0;
-	string className;
+	std::string className;
 	do {
 		currentClassN++;
-		className = "GraphWinAPI_" + to_string(currentClassN);
+		className = "GraphWinAPI_" + std::to_string(currentClassN);
 		wc.lpszClassName = className.c_str();
 	} while (!RegisterClassEx(&wc));
 
 	return className;
 }
 
-void gwapi::WindowLife::createWindow(WindowType &type, string className, DWORD EX_Style, DWORD WS_Style, LPVOID typePointer) {
+void gwapi::WindowLife::createWindow(WindowType &type, std::string className, DWORD EX_Style, DWORD WS_Style, LPVOID typePointer) {
 	HWND hwnd = CreateWindowEx(
 		EX_Style,
 		className.c_str(),
@@ -262,7 +265,7 @@ LRESULT gwapi::WindowLife::close(Window *This, HWND &hwnd, WPARAM &wParam, LPARA
 LRESULT gwapi::WindowLife::create(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam) {
 	/* Вызывается, когда должно быть создано окно. */
 
-	extern map<HWND, Window*> WindowMap_;
+	extern std::map<HWND, Window*> WindowMap_;
 
 	WindowType curWin = *((WindowType*) ((CREATESTRUCT*)lParam)->lpCreateParams);
 	This = curWin.This;

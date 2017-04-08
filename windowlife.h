@@ -7,9 +7,7 @@
 
 #include <map>
 #include <windows.h>
-#include <Windowsx.h>
 #include "winevents.h"
-using namespace std;
 
 namespace gwapi {
 
@@ -18,10 +16,12 @@ class WindowType;
 
 namespace WindowLife {
 
-extern map<HWND, Window*> WindowMap_;
+extern std::map<HWND, Window*> WindowMap_;
 
 /* Блок функций, связанных с сообщениями окна. */
 LRESULT CALLBACK currentWndProc(HWND, UINT, WPARAM, LPARAM);
+
+// TODO убрать из интерфейса всю эту фигню
 void taskbarRegister(Window*, UINT, HWND);
 LRESULT getMinMaxInfo(Window*, HWND&, WPARAM&, LPARAM&);
 LRESULT activate(Window*, HWND&, WPARAM&, LPARAM&);
@@ -37,9 +37,9 @@ LRESULT keyboard(Window*, HWND&, WPARAM&, LPARAM&, BOOL);
 
 /* Блок функций, связанных с созданием окна. */
 DWORD WINAPI windowMainThread(LPVOID);
-string registerClass(WindowType&);
+std::string registerClass(WindowType&);
 void createStyle(WindowType&, DWORD&, DWORD&);
-void createWindow(WindowType&, string, DWORD, DWORD, LPVOID);
+void createWindow(WindowType&, std::string, DWORD, DWORD, LPVOID);
 void msgCycle(void);
 
 }

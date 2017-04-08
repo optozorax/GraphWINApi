@@ -18,7 +18,7 @@ gwapi::WindowType::WindowType() :
 		position(Point(0,0)), 
 		size(Point(300,300)),
 		minSize(Point(0,0)), 
-		maxSize(Point(10000,10000)),
+		maxSize(Point(2000,2000)),
 		caption("GraphWinAPI program"),
 		style(Standart)
 {
@@ -66,7 +66,9 @@ gwapi::Window::Window(WindowType type) :
 	*type1 = type;
 
 	/* Создание потока, который создает окно и обрабатывает его сообщения. */
-	CreateThread( NULL, 0, &WindowLife::windowMainThread, type1, 0, NULL);	
+	CreateThread( NULL, 0, &WindowLife::windowMainThread, type1, 0, NULL);
+
+	// TODO сделать костыль, чтобы программа выходила из инициализации, только когда получит таскбар
 }
 
 gwapi::Window::~Window() {
@@ -94,7 +96,7 @@ Point gwapi::Window::sizeGet(void) {
 	return Point(rcClient.right, rcClient.bottom);
 }
 
-void gwapi::Window::captionSet(string cap) {
+void gwapi::Window::captionSet(std::string cap) {
 	SetWindowText(hwnd_, cap.c_str());
 }
 
