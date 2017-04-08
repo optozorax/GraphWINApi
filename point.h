@@ -3,13 +3,10 @@
 
 #include <vector>
 #include <iostream>
-#include <string>
 #include <math.h>
 
-using namespace std;
-
 template<class T, int n = 2> class AnyPoint {
-	vector<T> a_;
+	std::vector<T> a_;
 public:
 	AnyPoint(T = 0, T = 0, T = 0, T = 0);
 	T& operator[](int);
@@ -29,7 +26,7 @@ bool operator!=( AnyPoint<T, n> a,  AnyPoint<T, n> b);
 template<class T, int n> 
 bool operator==( AnyPoint<T, n> a,  AnyPoint<T, n> b);
 template<class T, int n> 
-ostream& operator<<(ostream& cout,  AnyPoint<T, n> a);
+std::ostream& operator<<(std::ostream& cout,  AnyPoint<T, n> a);
 template<class T, int n> 
 AnyPoint<T, n> operator-( AnyPoint<T, n> a);
 
@@ -127,7 +124,7 @@ bool operator==(AnyPoint<T, n> a, AnyPoint<T, n> b) {
 }
 
 template<class T, int n>
-ostream & operator<<(ostream &cout, AnyPoint<T, n> a) {
+std::ostream & operator<<(std::ostream &cout, AnyPoint<T, n> a) {
 	cout << "(";
 	for (int i = 0; i < n-1; i++) {
 		cout << a[i] << ", ";
