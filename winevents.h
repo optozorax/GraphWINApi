@@ -27,6 +27,8 @@ VK_OEM_CLEAR */
 
 namespace gwapi {
 
+class Window;
+
 class WinEvents {
 public:
 	// TODO добавить собыите на клавиатуру
@@ -38,13 +40,13 @@ public:
 		L_UP, R_UP, M_UP, X1_UP, X2_UP,
 		Wheel, Move
 	};
-	void (*size)(int, int);
-	void (*sizing)(long&, long&, long&, long&, SizingType);
-	void (*moving)(long&, long&, long&, long&);
-	void (*keyboard)(int, bool);
-	void (*mouse)(int, int,  MouseType, int);
-	void (*activate)(bool, bool);
-	void (*close)(void);
+	void (*size)(Window*, int, int);
+	void (*sizing)(Window*, long&, long&, long&, long&, SizingType);
+	void (*moving)(Window*, long&, long&, long&, long&);
+	void (*keyboard)(Window*, int, bool);
+	void (*mouse)(Window*, int, int,  MouseType, int);
+	void (*activate)(Window*, bool, bool);
+	void (*close)(Window*);
 
 	WinEvents();
 };

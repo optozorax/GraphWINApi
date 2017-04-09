@@ -213,7 +213,7 @@ LRESULT gwapi::WindowLife::activate(Window *This, HWND &hwnd, WPARAM &wParam, LP
 	bool fMinimized = (BOOL) HIWORD(wParam);
 
 	if (This->ev.activate != NULL)
-		(*(This->ev.activate))(fActive, fMinimized);
+		(*(This->ev.activate))(This, fActive, fMinimized);
 
 	return 0;
 }
@@ -226,7 +226,7 @@ LRESULT gwapi::WindowLife::size(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM
 
 	if (fwSizeType != SIZE_MINIMIZED) {
 		if (This->ev.size != NULL)
-			(*(This->ev.size))(nWidth, nHeight);
+			(*(This->ev.size))(This, nWidth, nHeight);
 	}
 	return 0;
 }
@@ -249,14 +249,14 @@ LRESULT gwapi::WindowLife::sizing(Window *This, HWND &hwnd, WPARAM &wParam, LPAR
 	}
 
 	if (This->ev.sizing != NULL)
-		(*(This->ev.sizing))(lprc->left, lprc->top, lprc->right, lprc->bottom, szType);
+		(*(This->ev.sizing))(This, lprc->left, lprc->top, lprc->right, lprc->bottom, szType);
 	return TRUE;
 }
 
 LRESULT gwapi::WindowLife::close(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam) {
 	/* Сигнал, означающий, что прикладная программа должна завершить свою работу. */
 	if (This->ev.close != NULL)
-		(*(This->ev.close))();
+		(*(This->ev.close))(This);
 
 	DestroyWindow( hwnd );
 	return 0;
@@ -313,7 +313,7 @@ LRESULT gwapi::WindowLife::comand(Window *This, HWND &hwnd, WPARAM &wParam, LPAR
 LRESULT gwapi::WindowLife::moving(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam) {
 	RECT* lprc = (LPRECT) lParam;
 	if (This->ev.moving != NULL)
-		(*(This->ev.moving))(lprc->left, lprc->top, lprc->right, lprc->bottom);
+		(*(This->ev.moving))(This, lprc->left, lprc->top, lprc->right, lprc->bottom);
 	return TRUE;
 }
 
@@ -346,13 +346,13 @@ LRESULT gwapi::WindowLife::mouse(Window *This, HWND &hwnd, WPARAM &wParam, LPARA
 	}
 
 	if (This->ev.mouse != NULL)
-		(*(This->ev.mouse))(xPos, yPos, mtype, wheel);
+		(*(This->ev.mouse))(This, xPos, yPos, mtype, wheel);
 
 	return 0;
 }
 
 LRESULT gwapi::WindowLife::keyboard(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam, BOOL state) {
 	if (This->ev.keyboard != NULL)
-		(*(This->ev.keyboard))((int) wParam, state);
+		(*(This->ev.keyboard))(This, (int) wParam, state);
 	return 0;
 }
