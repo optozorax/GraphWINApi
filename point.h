@@ -11,7 +11,12 @@ public:
 	AnyPoint(T = 0, T = 0, T = 0, T = 0);
 	T& operator[](int);
 	T length(void);
+
+	void rotate(T, AnyPoint<T, n> = AnyPoint<T, n>(), int = 0, int = 1);
 };
+
+template<class T1, class T, int n> 
+void to_another(AnyPoint<T, n>&, AnyPoint<T1, n>);
 
 template<class T, int n> 
 AnyPoint<T, n> operator+( AnyPoint<T, n> a,  AnyPoint<T, n> b);
@@ -76,6 +81,21 @@ T AnyPoint<T, n>::length(void) {
 	}
 	sum = sqrt(sum);
 	return sum;
+}
+
+template<class T, int n>
+inline void AnyPoint<T, n>::rotate(T angle, AnyPoint<T, n> b, int first, int second) {
+	T x = operator[](first) - b[first];
+	T y = operator[](second) - b[second];
+	operator[](first) = cos(angle)*x - sin(angle)*y + b[first];
+	operator[](second) = sin(angle)*x + cos(angle)*y + b[second];
+}
+
+template<class T1, class T, int n>
+inline void to_another(AnyPoint<T, n> &a, AnyPoint<T1, n> b) {
+	for (int i = 0; i < n; i++) {
+		a[i] = (T)(b[i]);
+	}
 }
 
 template<class T, int n>
