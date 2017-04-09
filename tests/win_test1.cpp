@@ -29,6 +29,21 @@ int main() {
 	b.canvas.brushSet(gwapi::argb(128,255,0,0));
 	b.canvas.lineDraw(Point(100,200), Point(200,100));
 	b.canvas.rectDraw(Point(10,10), Point(200,150));
+
+	std::vector<gwapi::Color> clrs;
+	clrs.push_back(gwapi::Blue);
+	clrs.push_back(gwapi::Green);
+	clrs.push_back(gwapi::Ubuntu);
+	std::vector<double> lns;
+	lns.push_back(5);
+	lns.push_back(1);
+	for (int i = 0; i < 200; i++) {
+		b.canvas.penSet(gwapi::gradient(i/200.0, true, clrs, lns));
+		b.canvas.lineDraw(Point(i, 0), Point(i, 20));
+		b.canvas.penSet(gwapi::rainbow(i/200.0, true));
+		b.canvas.lineDraw(Point(i, 20), Point(i, 30));
+	}
+
 	b.redraw();
 
 	system("pause");
