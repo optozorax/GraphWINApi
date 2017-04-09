@@ -42,25 +42,32 @@ gwapi::Color gwapi::rainbow(const double a, const bool cycle) {
 	return gradient(a, cycle, clrs);
 };
 
-gwapi::Color gwapi::gradient(const double a, const bool cycle, const std::vector<Color> clrs) {
+gwapi::Color gwapi::gradient(const double a, const bool cycle, const std::vector<Color> clrs, std::vector<double> lengths) {
 	register int n = clrs.size();
 	register double col = abs(a);
-	register double c;
 	if (cycle) {
-		while (col>1) {
-			col = abs(col-2);
-		}
+		while (col>1) col = abs(col-2);
 	}
 
+	if (lengths.size() == 0) {
+		for (int i = 0; i < n-1; i++) lengths.push_back(1.0/(n-1));
+	}
+
+	double sum = 0;
+	for (int i = 0; i < n-1; i++) sum += lengths[i];
+	for (int i = 0; i < n-1; i++) lengths[i] /= sum;
+
+	register double c;
 	register int r, g, b;
 	for (register int i = 0; i < n-1; i++) {
-		if (col>=i/(n-1.0) && col<=(i+1)/(n-1.0)) {
-			c = col*(n-1.0)-i;
-			r = clrs[i].m[0]+(clrs[i+1].m[0]-clrs[i].m[0])*c;
+		if (col<=lengths[i]) {
+			c = col/lengths[i];
+			b = clrs[i].m[0]+(clrs[i+1].m[0]-clrs[i].m[0])*c;
 			g = clrs[i].m[1]+(clrs[i+1].m[1]-clrs[i].m[1])*c;
-			b = clrs[i].m[2]+(clrs[i+1].m[2]-clrs[i].m[2])*c;
+			r = clrs[i].m[2]+(clrs[i+1].m[2]-clrs[i].m[2])*c;
 			break;
 		}
+		col -= lengths[i];
 	}
 
 	return rgb(r,g,b);

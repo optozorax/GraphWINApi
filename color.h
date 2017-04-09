@@ -18,7 +18,7 @@ Color argb(const int, const int, const int, const int);
 
 Color gray(const double, const bool cycle = false);
 Color rainbow(const double, const bool cycle = false);
-Color gradient(const double, const bool cycle, std::vector<Color>);
+Color gradient(const double, const bool cycle, std::vector<Color>, std::vector<double> = std::vector<double>());
 
 Color overlay(Color, Color);
 
