@@ -68,7 +68,8 @@ gwapi::Window::Window(WindowType type) :
 	/* Создание потока, который создает окно и обрабатывает его сообщения. */
 	CreateThread( NULL, 0, &WindowLife::windowMainThread, type1, 0, NULL);
 
-	// TODO сделать костыль, чтобы программа выходила из инициализации, только когда получит таскбар
+	// Костыль, чтобы программа выходила из инициализации, только когда получит таскбар
+	while (pTaskbarList == 0) Sleep(1);
 }
 
 gwapi::Window::~Window() {
