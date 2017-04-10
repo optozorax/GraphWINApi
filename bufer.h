@@ -51,8 +51,6 @@ class Bufer {
 	int sizex, sizey;
 	Pen pen_;
 	Brush brush_;
-
-	void Bufer::boardsToCorrect(Bufer&, int&, int&, int&, int&);
 public:
 	Bufer(int = 1000, int = 1000);
 	Bufer(HDC);

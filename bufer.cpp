@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include "bufer.h"
 
 namespace gwapi{
@@ -91,34 +93,36 @@ Bufer::~Bufer() {
 	DeleteDC(hdc_);
 }
 
-void Bufer::boardsToCorrect(Bufer &a, int &x, int &y, int &width, int &height) {
+void boardsToCorrect(int sizex, int sizey, int &x, int &y, int &width, int &height) {
 	// TODO протестировать на все случаи жизни.
 	/* Если высота и ширина равны нулю, то это значит, что надо нарисовать весь буфер. */
 	if (width == 0) width = sizex;	
 	if (height == 0) height = sizey;
 
 	/* Проверка хватит ли первого буфера для рисования. */
+	if (x < 0) x = 0;
+	if (y < 0) y = 0;
 	if (width > sizex) width = sizex;
 	if (height > sizey) height = sizey;
 
-	if (a.sizex != -1) {
+	if (sizex != -1) {
 		/* Проверка, не выходят ли x y за пределы второго буфера. */
-		if (x > a.sizex) x = sizex;
-		if (y > a.sizey) y = sizey;
+		if (x > sizex) x = sizex;
+		if (y > sizey) y = sizey;
 
 		/* Проверка не выходят ли границы квадрата за пределы второго буфера. */
-		if (x+width > a.sizex) width = sizex-x;
-		if (y+width > a.sizey) height = sizey-y;
+		if (x+width > sizex) width = sizex-x;
+		if (y+width > sizey) height = sizey-y;
 	}
 }
 
 void Bufer::drawTo(Bufer &a, int x, int y, int width, int height) {
-	boardsToCorrect(a, x, y, width, height);
+	boardsToCorrect(sizex, sizey, x, y, width, height);
 	BitBlt(a.hdc_, x, y, width, height, hdc_, 0, 0, SRCCOPY);
 }
 
 void Bufer::drawAlphaTo(Bufer &a, int x, int y, int width, int height) {
-	boardsToCorrect(a, x, y, width, height);
+	boardsToCorrect(sizex, sizey, x, y, width, height);
 
 	/* Само рисование с прозрачностью. */
 	Point c, d;
@@ -329,7 +333,66 @@ void gwapi::Bufer::circleDraw(point2, double) {
 	// Пиксель окружности можно представлять такими же методами, как и снизу
 }
 
-void gwapi::Bufer::lineDraw(point2, point2) {
+void createBorders(point2 p1, point2 p2, Point &p3, Point &p4, double thick, int sizex, int sizey) {
+	p3 = Point(min(p1[0], p2[0]), min(p1[1], p2[1]));
+	p4 = Point(max(p1[0], p2[0]), max(p1[1], p2[1]));
+
+	p3[0] -= thick*1.5;
+	p3[1] -= thick*1.5;
+	p4[0] += thick*1.5;
+	p4[1] += thick*1.5;
+
+	p4 = p4 - p3;
+	boardsToCorrect(sizex, sizey, p3[0], p3[1], p4[0], p4[1]);
+	p4 = p4 + p3;
+}
+
+double getAlpha(Point x, point2 p1, point2 p2, double thick) {
+	double a, b, c, d, r, r1;
+
+	// Получение параметров прямой
+	if ((d = p2[0]*p1[1]-p1[0]*p2[1]) != 0) {
+		a = (p2[1]-p1[1])/d;
+		b = (p1[0]-p2[0])/d;
+		c = 1;
+	} else if ((d = p2[1]-p1[1]) != 0) {
+		a = 1;
+		b = (p1[0]-p2[0])/d;
+		c = (p2[0]*p1[1]-p1[0]*p2[1])/d;
+	} else {
+		std::cout << "Points not to line: " << p1 << " " << p2 << std::endl;
+	}
+
+	// Расстояние от точки до прямой
+	r = fabs(a*(x[0]+0.5) + b*(x[1]+0.5) + c)/sqrt(a*a + b*b);
+
+	// Проекция точки на прямую
+	point2 pr = point2(
+		(b*(b*(x[0]+0.5)-a*(x[1]+0.5))-a*c)/(a*a + b*b), 
+		(a*(-b*(x[0]+0.5)+a*(x[1]+0.5))-b*c)/(a*a + b*b));
+
+	if (r < (thick+1)) { // Точка находится в бесконечном прямоугольнике прямой, образованной отрезком
+		bool inRect = inRectangle(pr, p1, p2) || inRectangle(pr, p2, p1);
+
+		if (!inRect && ((r1 = min((p1-pr).length(),(p2-pr).length())) < 1) ) { 
+			// Данная точка на боках прямой с прозрачностью
+			return r1;
+		}
+		if (inRect) {
+			if (r > thick) {
+				// Точка на краях прямоугольника
+				r -= thick;
+				return 1-r;
+			} else {
+				// Точка внутри прямоугольника
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+void gwapi::Bufer::lineDraw(point2 p1, point2 p2) {
 	// TODO реализовать
 	// Для того, чтобы нарисовать линию со сглаживанием, можно подойти к рассмотрению степени насыщенности цвета с разных сторон:
 	//		Насыщенность считается как отношение площади которую занимает прямоугольник линии с ее толщиной в данном пикселе к площади пикселя
@@ -340,6 +403,21 @@ void gwapi::Bufer::lineDraw(point2, point2) {
 	//			Аналитически рассчитать формулы для рассчета идеальной площади которую линия занимает в пикселе.
 	//		В будущем можно будет рассмотреть все эти методы и сравнить качество картинки и скорость работы.
 	//		И уже в итоговый вариант войдет оптимальный по скорости и качеству.
+	Point p3, p4;
+	createBorders(p1, p2, p3, p4, pen_.thickness, sizex, sizey);
+
+	Color newc;
+	double alpha;
+	for (int i = p3[0]; i < p4[0]; i++) {
+		for (int j = p3[1]; j < p4[1]; j++) {
+			alpha = getAlpha(Point(i, j), p1, p2, pen_.thickness/2.0);
+
+			newc = pen_.color;
+			newc.m[3] = newc.m[3]*alpha;
+			if (newc.m[3] == 0) newc.m[3] = 1;
+			operator[](Point(i, j)) = gwapi::overlay(newc, operator[](Point(i, j))).clrref;
+		}
+	}
 }
 
 void gwapi::Bufer::polyDraw(std::vector<point2> mas) {
