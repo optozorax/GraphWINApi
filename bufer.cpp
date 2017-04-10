@@ -275,12 +275,35 @@ UINT32& Bufer::pixelGet(Point a) {
 	}
 }
 
-void Bufer::bezierDraw(std::vector<Point>, BezierStyle) {
+void Bufer::bezierDraw(std::vector<Point> a, BezierStyle stl) {
 	// TODO реализовать
 	// Последовательность работы:
 	//		Рассчитать длину ломаной по точкам.
 	//		Взять количество итераций = длина\5.
 	//		Рисовать кривую Безье обычным образом по полученному числу итераций при помощи целочисленной прямой.
+
+	double len = 0;
+	for (int i = 0; i < a.size()-1; i++) {
+		len += (a[i]-a[i+1]).length();
+	}
+
+	int iters = (int)(len/5.0);
+	double t;
+	std::vector<point2> b(a.size());
+	Point b2;
+	Point b1;
+	for (int i = 0; i <= iters; i++) {
+		for (int j = 0; j < a.size(); j++) to_another(b[j], a[j]);
+
+		for (int j = 1; j < a.size(); j++) {
+			for (int k = 0; k < a.size()-j; k++) {
+				b[k] = b[k] + (b[k+1]-b[k])*((double)(i)/iters);
+			}
+		}
+		to_another(b2, b[0]);
+		if (i != 0) lineDraw(b2, b1);
+		b1 = b2;
+	}
 }
 
 void gwapi::Bufer::pixelDraw(point2, Color) {
