@@ -16,7 +16,7 @@ public:
 
 	void draw(gwapi::Bufer&, point2 = point2(), double = 1);
 	void step(double, double, double = 0, double = 0);
-	void getParams(double&, double&);
+	//void getParams(double&, double&);
 };
 
 Car::Car(point2 sz, point2 ps, double sp, double an, double wh) :
@@ -86,13 +86,13 @@ void Car::draw(gwapi::Bufer &buf, point2 center, double scale) {
 void Car::step(double pedal, double wheel, double brake, double orient) {
 	/* Константы, которые контроллируют физическую часть симуляции. */
 	const double pedalForce = 0.1; // Скорость возрастания скорости
-	const double brakeForce = 0.8; // Скорость торможения
+	const double brakeForce = 0.97; // Скорость торможения
 	const double wheelForce = 0.01; // Скорость возрастания угла
-	const double orientForce = 0.8; // Скорость возвращения угла на место
+	const double orientForce = 0.97; // Скорость возвращения угла на место
 	const double speedMax = 40; // Максимальная скорость
 	const double angleMax = M_PI/4; // Максимальный угол колес
 	const double speedFriction = 1;//0.99; // Какая часть скорости теряется каждую итерацию от трения 
-	const double angleFriction = 1;//0.99; // Какая часть угла теряется каждую итерацию от трения
+	const double angleFriction = 0.99; // Какая часть угла теряется каждую итерацию от трения
 	const double dt = 0.1; // Количество времени, которое проходит за итерацию
 
 	/* Контроль выхода за границы. */
@@ -165,18 +165,14 @@ int main() {
 	current.canvas.resize(800, 800);
 	current.sizeSet(Point(800, 800));
 
-	const int carNum = 30;
+	const int carLayers = 3;
+	const int carInCircle = 20;
+	const int carNum = carLayers*carInCircle;
 	std::vector<Car> cars(carNum);
-	for (int i = 0; i < 10; i++) {
-		cars[i] = Car(point2(16,7), point2(cos(M_PI*i/5.0)*40, sin(M_PI*i/5.0)*40), 0, M_PI*i/5.0 + M_PI/2.0, 0);
-	}
-
-	for (int i = 10; i < 20; i++) {
-		cars[i] = Car(point2(16,7), point2(cos(M_PI*i/5.0)*60, sin(M_PI*i/5.0)*60), 0, M_PI*i/5.0, 0);
-	}
-
-	for (int i = 20; i < 30; i++) {
-		cars[i] = Car(point2(16,7), point2(cos(M_PI*i/5.0)*70, sin(M_PI*i/5.0)*70), 0, -M_PI*i/5.0, 0);
+	for (int j = 0; j < carLayers; j++) {
+		for (int i = j*carInCircle; i < (j+1)*carInCircle; i++) {
+			cars[i] = Car(point2(16,7), point2(cos(M_PI*i/carInCircle*2.0)*(j+1)*10, sin(M_PI*i/carInCircle*2.0)*(j+1)*10), 0, M_PI*i/carInCircle*2.0 + M_PI/6.0*j, 0);
+		}
 	}
 
 	while (true) {
@@ -184,7 +180,7 @@ int main() {
 		mykeyboard(current);
 		for (int i = 0; i < carNum; i++) {
 			cars[i].step(pd, wh, br, or);
-			cars[i].draw(current.canvas, point2(400, 400), 2);
+			cars[i].draw(current.canvas, point2(400, 400), 2.5);
 		}
 
 		pd = wh = br = or = 0;
