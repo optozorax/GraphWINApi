@@ -149,7 +149,7 @@ std::ostream & operator<<(std::ostream &cout, AnyPoint<T, n> a) {
 	for (int i = 0; i < n-1; i++) {
 		cout << a[i] << ", ";
 	}
-	cout << a[i] << ")";
+	cout << a[n-1] << ")";
 
 	return cout;
 }
