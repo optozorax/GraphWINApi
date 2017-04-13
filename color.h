@@ -1,5 +1,4 @@
-#ifndef __COLORDEFINE
-#define __COLORDEFINE
+#pragma once
 
 #include <vector>
 
@@ -32,38 +31,33 @@ const Color Transparent = argb(1, 0, 0, 0);
 const Color Red = rgb(255,0,0);
 const Color Green = rgb(0,255,0);
 const Color Blue = rgb(0,0,255);
-const Color Yellow = rgb(255,255,0);
-const Color Purple = rgb(255,0,255);
-const Color LightBlue = rgb(0,255,255);
 
-// TODO дописать всякие еще
+const Color Yellow = rgb(255,255,0);
+const Color Fuchsia = rgb(255,0,255);
+const Color Aqua = rgb(0,255,255);
+
+const Color Maroon = rgb(128, 0, 0);
+const Color Oliv = rgb(128, 128, 0);
+const Color Purple = rgb(128, 0, 128);
+const Color Teal = rgb(0, 128, 128);
+const Color Navy = rgb(0, 0, 128);
+const Color Gray = rgb(128, 128, 128);
+
+const Color DarkBlue = rgb(77,77,255);
+const Color LightBlue = rgb(0,191,255);
+const Color Orange = rgb(255,128,0);
+const Color Gold = rgb(0xFF, 0xD7, 0);
+const Color Indigo = rgb(0x4B, 0, 0x80);
+const Color Silver = rgb(0xC0, 0xC0, 0xC0);
+const Color Violet = rgb(0xEE, 0x80, 0xEE);
 
 const Color Ubuntu = rgb(0x77, 0x21, 0x6F);
 const Color UbuntuOrange = rgb(0xE9, 0x54, 0x20);
 const Color Bitcoin = rgb(0xFF,	0x99, 0x00);
 const Color Miku = rgb(9,237,195);
 const Color Dollar = rgb(0x85, 0xbb, 0x65);
-
-/* Monokai: можно эти цвета в пространстве имен сделать
-@ghost-white: #F8F8F0;
-@light-ghost-white: #F8F8F2;
-@light-gray: #CCC;
-@gray: #888;
-@brown-gray: #49483E;
-@dark-gray: #282828;
-
-@yellow: #E6DB74;
-@blue: #66D9EF;
-@pink: #F92672;
-@purple: #AE81FF;
-@brown: #75715E;
-@orange: #FD971F;
-@light-orange: #FFD569;
-@green: #A6E22E;
-@sea-green: #529B2F; */
-
-//#define __COLORDEBUG
+const Color SeaGreen = rgb(0x52, 0x9B, 0x2F);
+const Color Pink = rgb(0xF9, 0x26, 0x72);
+const Color GreenYellow = rgb(0xAD, 0xFF, 0x2F);
 
 }
-
-#endif

@@ -31,13 +31,13 @@ gwapi::Color gwapi::gray(const double a, const bool cycle) {
 gwapi::Color gwapi::rainbow(const double a, const bool cycle) {
 	/* Ќачинаетс€ с красного, заканчиваетс€ фиолетовым. */
 	std::vector<Color> clrs(7);
-	clrs[0] = rgb(255,0,0);
-	clrs[1] = rgb(255,128,0);
-	clrs[2] = rgb(255,255,0);
-	clrs[3] = rgb(0,255,0);
-	clrs[4] = rgb(0,191,255);
-	clrs[5] = rgb(77,77,255);
-	clrs[6] = rgb(128,0,255);
+	clrs[0] = Red;
+	clrs[1] = Orange;
+	clrs[2] = Yellow;
+	clrs[3] = Green;
+	clrs[4] = LightBlue;
+	clrs[5] = DarkBlue;
+	clrs[6] = Violet;//rgb(128,0,255);
 
 	return gradient(a, cycle, clrs);
 };
