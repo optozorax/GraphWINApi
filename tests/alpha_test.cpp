@@ -4,23 +4,24 @@
 int main() {
 	gwapi::Window a;
 
-	a.canvas.penSet(gwapi::Miku, 2);
-	a.canvas.lineDraw(point2(-20, -20), point2(1000, 1000));
-
-	Sleep(500);
+	//a.canvas.penSet(gwapi::argb(255, 9, 237, 195), 10);
+	a.canvas.penSet(gwapi::Black, 5);
 
 	while (true) {
 		for (int i = 0; i < 3000; i++) {
 			a.canvas.clear();
+			a.canvas.lineDraw(Point(20 + 50, 60.0 + i/100.0), Point(50 + 50, 66.0 + i/100.0));
+			a.canvas.lineDraw(Point(50 + 50, 66.0 + i/100.0), Point(10 + 50, 40.0 + i/100.0));
+			a.canvas.lineDraw(Point(10 + 50, 40.0 + i/100.0), Point(20 + 50, 60.0 + i/100.0));
+
+			a.canvas.lineDraw(point2(10, 30), point2(100, 50));
+
 			a.canvas.lineDraw(point2(20, 60.0 + i/100.0), point2(50, 66.0 + i/100.0));
 			a.canvas.lineDraw(point2(50, 66.0 + i/100.0), point2(10, 40.0 + i/100.0));
 			a.canvas.lineDraw(point2(10, 40.0 + i/100.0), point2(20, 60.0 + i/100.0));
 
-			a.canvas.lineDraw(Point(20 + 50, 60.0 + i/100.0), Point(50 + 50, 66.0 + i/100.0));
-			a.canvas.lineDraw(Point(50 + 50, 66.0 + i/100.0), Point(10 + 50, 40.0 + i/100.0));
-			a.canvas.lineDraw(Point(10 + 50, 40.0 + i/100.0), Point(20 + 50, 60.0 + i/100.0));
+			a.canvas.lineDraw(point2(10, 10), point2(100, 10));
 			a.redraw();
-			Sleep(3);
 		}
 	}
 	a.canvas.penSet(gwapi::Ubuntu, 2);
