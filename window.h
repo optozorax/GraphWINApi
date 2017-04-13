@@ -67,9 +67,9 @@ public:
 	void taskbarProgress(double);
 	void taskbarColor(TaskbarColor = Loading);
 
-	unsigned long timeGet(void);
-	
-	bool isKeyDown(int);
+	static unsigned long timeGet(void);
+	static bool isKeyDown(int);
+	static void sleep(unsigned long);
 	
 	//# Когда-нибудь сделать интерфейс для работы с потоками, возможно отдельный класс. #//
 

@@ -57,7 +57,7 @@ void gwapi::Window::taskbarColor(TaskbarColor clr) {
 }
 
 gwapi::Window::Window(WindowType type) :
-	canvas(type.size[0]+50, type.size[0]+50), 
+	canvas(type.size.x+50, type.size.y+50), 
 	MinSize(type.minSize), 
 	MaxSize(type.maxSize)
 {
@@ -88,7 +88,7 @@ void gwapi::Window::sizeSet(Point sz) {
 	GetWindowRect( hwnd_, &rcWindow );
 	ptDiff.x = (rcWindow.right - rcWindow.left) - rcClient.right;
 	ptDiff.y = (rcWindow.bottom - rcWindow.top) - rcClient.bottom;
-	MoveWindow( hwnd_, rcWindow.left, rcWindow.top, sz[0] + ptDiff.x, sz[1] + ptDiff.y, false);
+	MoveWindow( hwnd_, rcWindow.left, rcWindow.top, sz.x + ptDiff.x, sz.y + ptDiff.y, false);
 }
 
 Point gwapi::Window::sizeGet(void) {
@@ -104,7 +104,7 @@ void gwapi::Window::captionSet(std::string cap) {
 void gwapi::Window::positionSet(Point ps) {
 	RECT rcClient;
 	GetClientRect( hwnd_, &rcClient );
-	MoveWindow( hwnd_, ps[0], ps[1], rcClient.right, rcClient.bottom, false);
+	MoveWindow( hwnd_, ps.x, ps.y, rcClient.right, rcClient.bottom, false);
 }
 
 void gwapi::Window::fullscreen(bool state) {
@@ -149,6 +149,10 @@ unsigned long gwapi::Window::timeGet(void) {
 	двумя событиями, надо получить разность времени 
 	между его началом и концом.*/
 	return GetTickCount();
+}
+
+void gwapi::Window::sleep(unsigned long t) {
+	Sleep(t);
 }
 
 /* ~wapithread - создание потока. */

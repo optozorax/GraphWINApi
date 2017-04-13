@@ -1,218 +1,112 @@
-#ifndef __POINTDEFINE
-#define __POINTDEFINE
+#pragma once
 
-#include <vector>
 #include <iostream>
 #include <math.h>
 
-template<class T, int n = 2> class AnyPoint {
-	std::vector<T> a_;
+template<class T> class _point {
 public:
-	AnyPoint(T = 0, T = 0, T = 0, T = 0);
-	T& operator[](int);
+	T x, y;
+	_point(T = 0, T = 0);
+	
 	T length(void);
+	void rotate(T, _point<T>);
 
-	void rotate(T, AnyPoint<T, n> = AnyPoint<T, n>(), int = 0, int = 1);
+	template<class T1>
+	operator _point<T1>();
 };
 
-template<class T1, class T, int n> 
-void to_another(AnyPoint<T, n>&, AnyPoint<T1, n>);
+template<class T> 
+_point<T> operator+(_point<T> a, _point<T> b);
+template<class T> 
+_point<T> operator-(_point<T> a, _point<T> b);
+template<class T> 
+_point<T> operator*(_point<T> a,  T b);
+template<class T>
+_point<T> operator/(_point<T> a,  T b);
+template<class T> 
+bool operator!=(_point<T> a, _point<T> b);
+template<class T> 
+bool operator==(_point<T> a, _point<T> b);
+template<class T> 
+std::ostream& operator<<(std::ostream& cout, _point<T> a);
+template<class T> 
+_point<T> operator-(_point<T> a);
 
-template<class T, int n> 
-AnyPoint<T, n> operator+( AnyPoint<T, n> a,  AnyPoint<T, n> b);
-template<class T, int n> 
-AnyPoint<T, n> operator-( AnyPoint<T, n> a,  AnyPoint<T, n> b);
-template<class T, int n> 
-AnyPoint<T, n> operator*( AnyPoint<T, n> a,  T b);
-template<class T, int n> 
-AnyPoint<T, n> operator/( AnyPoint<T, n> a,  T b);
-template<class T, int n> 
-bool operator!=( AnyPoint<T, n> a,  AnyPoint<T, n> b);
-template<class T, int n> 
-bool operator==( AnyPoint<T, n> a,  AnyPoint<T, n> b);
-template<class T, int n> 
-std::ostream& operator<<(std::ostream& cout,  AnyPoint<T, n> a);
-template<class T, int n> 
-AnyPoint<T, n> operator-( AnyPoint<T, n> a);
+template<class T> 
+bool inRectangle(_point<T>, _point<T>, _point<T>);
 
-template<class T, int n> 
-bool inRectangle(AnyPoint<T, n>, AnyPoint<T, n>, AnyPoint<T, n>);
+typedef _point<int> Point;
+typedef _point<double> point2;
 
-typedef AnyPoint<int,2> Point;
-typedef AnyPoint<double,2> point2;
-typedef AnyPoint<double,3> point3;
-typedef AnyPoint<double,4> point4;
+// ------------------------------------------------------------------------- //
 
-/* ------------------------------------------------------------------------- */
-
-template<class T, int n>
-inline AnyPoint<T, n>::AnyPoint(T x, T y, T z, T w) : a_(n) {
-	if (n == 2) {
-		a_[0] = x;
-		a_[1] = y;
-	} else
-	if (n == 3) {
-		a_[0] = x;
-		a_[1] = y;
-		a_[2] = z;
-	} else
-	if (n == 4) {
-	 	a_[0] = x;
-		a_[1] = y;
-		a_[2] = z;
-		a_[3] = w;
-	} else {
-		for (int i = 0; i < n; i++) {
-			a_[i] = 0;
-		}
-	}
+template<class T>
+inline _point<T>::_point(T x1, T y1) {
+	x = x1;
+	y = y1;
 }
 
-template<class T, int n>
-inline T& AnyPoint<T, n>::operator[](int i) {
-	return a_[i];
+template<class T>
+inline T _point<T>::length(void) {
+	return sqrt(x*x + y*y);
 }
 
-template<class T, int n>
-T AnyPoint<T, n>::length(void) {
-	T sum = 0;
-	for (int i = 0; i<n; i++) {
-		sum += a_[i]*a_[i];
-	}
-	sum = sqrt(sum);
-	return sum;
+template<class T>
+inline void _point<T>::rotate(T angle, _point<T> center) {
+	T x1 = x - center.x;
+	T y1 = y - center.y;
+	x = cos(angle)*x1 - sin(angle)*y1 + center.x;
+	y = sin(angle)*x1 + cos(angle)*y1 + center.y;
 }
 
-template<class T, int n>
-inline void AnyPoint<T, n>::rotate(T angle, AnyPoint<T, n> b, int first, int second) {
-	T x = operator[](first) - b[first];
-	T y = operator[](second) - b[second];
-	operator[](first) = cos(angle)*x - sin(angle)*y + b[first];
-	operator[](second) = sin(angle)*x + cos(angle)*y + b[second];
+template<class T>
+template<class T1>
+inline _point<T>::operator _point<T1>() {
+	return _point<T1>((T1) x, (T1) y);
 }
 
-template<class T1, class T, int n>
-inline void to_another(AnyPoint<T, n> &a, AnyPoint<T1, n> b) {
-	for (int i = 0; i < n; i++) {
-		a[i] = (T)(b[i]);
-	}
+template<class T>
+inline _point<T> operator+(_point<T> a, _point<T> b) {
+	return _point<T>(a.x + b.x, a.y + b.y);
 }
 
-template<class T, int n>
-inline AnyPoint<T,n> operator+(AnyPoint<T,n> a, AnyPoint<T,n> b) {
-	for (int i = 0; i < n; i++) {
-		a[i] += b[i];
-	}
-	return a;
+template<class T>
+inline _point<T> operator-(_point<T> a, _point<T> b) {
+	return _point<T>(a.x - b.x, a.y - b.y);
 }
 
-template<class T, int n>
-AnyPoint<T, n> operator-(AnyPoint<T, n> a, AnyPoint<T, n> b) {
-	return a + (-b);
+template<class T>
+inline _point<T> operator*(_point<T> a, T b) {
+	return _point<T>(a.x*b, a.y*b);
 }
 
-template<class T, int n>
-AnyPoint<T, n> operator*(AnyPoint<T, n> a, T b) {
-	for (int i = 0; i < n; i++) {
-		a[i] *= b;
-	}
-
-	return a;
+template<class T>
+inline _point<T> operator/(_point<T> a, T b) {
+	return _point<T>(a.x/b, a.y/b);
 }
 
-template<class T, int n>
-AnyPoint<T, n> operator/(AnyPoint<T, n> a, T b) {
-	for (int i = 0; i < n; i++) {
-		a[i] /= b;
-	}
-
-	return a;
+template<class T>
+inline _point<T> operator-(_point<T> a) {
+	return _point<T>(-a.x, -a.y);
 }
 
-template<class T, int n>
-bool operator!=(AnyPoint<T, n> a, AnyPoint<T, n> b) {
-	return !(a == b);
+template<class T>
+inline bool inRectangle(_point<T> x, _point<T> a, _point<T> b) {
+	return (x.x >= a.x) && (x.x <= b.x) && (x.y >= a.y) && (x.y <= b.y);
 }
 
-template<class T, int n>
-bool operator==(AnyPoint<T, n> a, AnyPoint<T, n> b) {
-	bool cond = true;
-	for (int i = 0; i < n; i++) {
-		cond = cond && (a[i] == b[i]);
-	}
-	return cond;
-}
-
-template<class T, int n>
-std::ostream & operator<<(std::ostream &cout, AnyPoint<T, n> a) {
-	cout << "(";
-	for (int i = 0; i < n-1; i++) {
-		cout << a[i] << ", ";
-	}
-	cout << a[n-1] << ")";
-
+template<class T>
+inline std::ostream & operator<<(std::ostream & cout, _point<T> a) {
+	cout << "(" << a.x << ", " << a.y << ")";
 	return cout;
 }
 
-template<class T, int n>
-AnyPoint<T, n> operator-(AnyPoint<T, n> a) {
-	return a*((T)-1);
+template<class T>
+inline bool operator!=(_point<T> a, _point<T> b) {
+	return (a.x != b.x) && (a.y != b.y);
 }
 
-template<class T, int n> 
-bool inRectangle(AnyPoint<T, n> a, AnyPoint<T, n> b, AnyPoint<T, n> c) {
-	for (int i = 0; i < n; i++) {
-		if (!(a[i]>=b[i] && a[i]<=c[i])) {
-			return false;
-		}
-	}
-	return true;
-};
-
-//#define __POINTDEBUG
-
-#ifdef __POINTDEBUG
-#include <stdio.h>
-#include <stdlib.h>
-int main() {
-	point2 a1, a2(2, 4); a1[1] = 1;
-	point3 b1(1, 2, 3), b2(3, 3, 3);
-	point4 c1(1,2,3,4), c2(-1,1,-1,1);
-	Point d1(2,4), d2(1,-1);
-
-	cout.precision(1);
-
-	cout << "This is test of Point module." << endl;
-
-	cout << "a1 = " << a1 << endl;
-	cout << "a2 = " << a2 << endl;
-	cout << "a1 + a2 = " << a1 + a2 << endl;
-	cout << "a1 - a2 = " << a1 - a2 << endl;
-	cout << "-a1 = " << -a1 << endl;
-	cout << "a2*2 = " << a2*2.0 << endl;
-	cout << "(a2 != a1) = " << ((a2 != a1) ?  "true" : "false") << endl;
-	cout << "length(a1) = " << a1.length() << endl;
-	cout << "a1.x, a1.y = " << a1[0] << ", " << a1[1] << endl << endl; 
-
-	cout << "b1 = " << b1 << endl;
-	cout << "b2 = " << b2 << endl;
-	cout << "b1 + b2 = " << b1 + b2 << endl;
-	cout << "b1 - b2 = " << b1 - b2 << endl;
-	cout << "-b1 = " << -b1 << endl;
-	cout << "b2*2 = " << b2*2.0 << endl;
-	cout << "(b2 != b1) = " << ((b2 != b1) ?  "true" : "false") << endl;
-	cout << "length(b1) = " << b1.length() << endl << endl;
-
-	cout << "c1 = " << c1 << endl;
-	cout << "c2 = " << c2 << endl;
-	cout << "c1.x, c1.y, c1.z, c1.w = " << c1[0] << ", " << c1[1] << ", " << c1[2] << ", " << c1[3] << endl << endl;
-
-	cout << "d1 = " << d1 << endl;
-	cout << "d2 = " << d2 << endl;
-	cout << "d1 + d2*2 = " << d1 + d2*2 << endl;
-
-	system("pause");
+template<class T>
+inline bool operator==(_point<T> a, _point<T> b) {
+	return (a.x == b.x) && (a.y == b.y);
 }
-#endif
-
-#endif

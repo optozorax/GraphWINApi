@@ -179,8 +179,8 @@ void Bufer::textOut(Point x, std::string str, TextWriteStyle stl) {
 	std::string first;
 	do {
 		first = str.substr(0, str.find("\n"));
-		TextOut(hdc_, x[0], x[1], first.c_str(), first.size()); 
-		x = x + Point(0, textSize(first)[1]);
+		TextOut(hdc_, x.x, x.y, first.c_str(), first.size()); 
+		x = x + Point(0, textSize(first).y);
 		str.erase(0, first.size()+1);
 	} while (str.size() != 0);
 }
@@ -193,7 +193,7 @@ Point gwapi::Bufer::textSize(std::string str) {
 	do {
 		first = str.substr(0, str.find("\n"));
 		GetTextExtentPoint32(hdc_, first.c_str(), first.size(), sz);
-		x = Point(max(x[0], sz->cx), max(x[1], sz->cy));
+		x = Point(max(x.x, sz->cx), max(x.y, sz->cy));
 		str.erase(0, first.size()+1);
 	} while (str.size() != 0);
 	delete sz;
@@ -236,38 +236,38 @@ void Bufer::pixelDraw(Point x, Color c) {
 }
 
 void Bufer::rectDraw(Point a, Point b) {
-	/*for (int i = a[0]; i < b[0]; i++) {
-		for (int j = a[1]; j < b[1]; j++) {
+	/*for (int i = a.x; i < b.x; i++) {
+		for (int j = a.y; j < b.y; j++) {
 			operator[](Point(i, j)) = brush_.clrref;
 		}
 	}*/
-	PatBlt(hdc_, a[0], a[1], b[0]-a[0], b[1]-a[1], PATCOPY);
-	lineDraw(a, Point(b[0], a[1]));
-	lineDraw(a, Point(a[0], b[1]));
-	lineDraw(b, Point(b[0], a[1]-1));
-	lineDraw(b, Point(a[0]-1, b[1]));
+	PatBlt(hdc_, a.x, a.y, b.x-a.x, b.y-a.y, PATCOPY);
+	lineDraw(a, Point(b.x, a.y));
+	lineDraw(a, Point(a.x, b.y));
+	lineDraw(b, Point(b.x, a.y-1));
+	lineDraw(b, Point(a.x-1, b.y));
 }
 
 void Bufer::circleDraw(Point c, int r) {
-	Ellipse(hdc_, c[0] - r, c[1] - r, c[0] + r, c[1] + r);
+	Ellipse(hdc_, c.x - r, c.y - r, c.x + r, c.y + r);
 }
 
 void Bufer::lineDraw(Point a, Point b) {
-	MoveToEx(hdc_, a[0], a[1], NULL);
-	LineTo(hdc_, b[0], b[1]);
+	MoveToEx(hdc_, a.x, a.y, NULL);
+	LineTo(hdc_, b.x, b.y);
 }
 
 void gwapi::Bufer::polyDraw(std::vector<Point> mas) {
 	POINT *mas1 = new POINT[mas.size()];
 	for (int i = 0; i < mas.size(); i++) {
-		mas1[i] = {mas[i][0], mas[i][1]};
+		mas1[i] = {mas[i].x, mas[i].y};
 	}
 	Polyline(hdc_, mas1, mas.size());
 	delete mas1;
 }
 
 inline UINT32& Bufer::operator[](Point a) {
-	return mas_[a[0] + sizey*a[1]];
+	return mas_[a.x + sizey*a.y];
 }
 
 UINT32& Bufer::pixelGet(Point a) {
@@ -297,14 +297,14 @@ void Bufer::bezierDraw(std::vector<Point> a, BezierStyle stl) {
 	Point b2;
 	Point b1;
 	for (int i = 0; i <= iters; i++) {
-		for (int j = 0; j < a.size(); j++) to_another(b[j], a[j]);
+		for (int j = 0; j < a.size(); j++) b[j] = a[j];
 
 		for (int j = 1; j < a.size(); j++) {
 			for (int k = 0; k < a.size()-j; k++) {
 				b[k] = b[k] + (b[k+1]-b[k])*((double)(i)/iters);
 			}
 		}
-		to_another(b2, b[0]);
+		b2 = b[0];
 		if (i != 0) lineDraw(b2, b1);
 		b1 = b2;
 	}
@@ -334,49 +334,52 @@ void gwapi::Bufer::circleDraw(point2, double) {
 }
 
 void createBorders(point2 p1, point2 p2, Point &p3, Point &p4, double thick, int sizex, int sizey) {
-	p3 = Point(min(p1[0], p2[0]), min(p1[1], p2[1]));
-	p4 = Point(max(p1[0], p2[0]), max(p1[1], p2[1]));
+	p3 = Point(min(p1.x, p2.x), min(p1.y, p2.y));
+	p4 = Point(max(p1.x, p2.x), max(p1.y, p2.y));
 
-	p3[0] -= thick*1.5;
-	p3[1] -= thick*1.5;
-	p4[0] += thick*1.5;
-	p4[1] += thick*1.5;
+	p3.x -= thick*1.5 + 3;
+	p3.y -= thick*1.5 + 3;
+	p4.x += thick*1.5 + 3;
+	p4.y += thick*1.5 + 3;
 
 	p4 = p4 - p3;
-	boardsToCorrect(sizex, sizey, p3[0], p3[1], p4[0], p4[1]);
+	boardsToCorrect(sizex, sizey, p3.x, p3.y, p4.x, p4.y);
 	p4 = p4 + p3;
 }
 
-double getAlpha(Point x, point2 p1, point2 p2, double thick) {
-	double a, b, c, d, r, r1;
+double pa_, pb_, pc_, ab_, sab_;
+double getAlpha(Point &x1, const point2 &p1, const point2 &p2, double thick) {
+	point2 x = x1;
+	x = x + point2(0.5, 0.5);
 
-	// Получение параметров прямой
-	if ((d = p2[0]*p1[1]-p1[0]*p2[1]) != 0) {
-		a = (p2[1]-p1[1])/d;
-		b = (p1[0]-p2[0])/d;
-		c = 1;
-	} else if ((d = p2[1]-p1[1]) != 0) {
-		a = 1;
-		b = (p1[0]-p2[0])/d;
-		c = (p2[0]*p1[1]-p1[0]*p2[1])/d;
-	} else {
-		std::cout << "Points not to line: " << p1 << " " << p2 << std::endl;
-	}
+	double a, b, c, d, r, r1;
+	a = pa_;
+	b = pb_;
+	c = pc_;
+
+	thick = thick-1;
+	if (thick < 0) thick = 0;
 
 	// Расстояние от точки до прямой
-	r = fabs(a*(x[0]+0.5) + b*(x[1]+0.5) + c)/sqrt(a*a + b*b);
+	r = fabs(a*x.x + b*x.y + c)/sab_;
 
 	// Проекция точки на прямую
 	point2 pr = point2(
-		(b*(b*(x[0]+0.5)-a*(x[1]+0.5))-a*c)/(a*a + b*b), 
-		(a*(-b*(x[0]+0.5)+a*(x[1]+0.5))-b*c)/(a*a + b*b));
+		(b*(b*x.x-a*x.y)-a*c)/ab_, 
+		(a*(-b*x.x+a*x.y)-b*c)/ab_);
 
 	if (r < (thick+1)) { // Точка находится в бесконечном прямоугольнике прямой, образованной отрезком
-		bool inRect = inRectangle(pr, p1, p2) || inRectangle(pr, p2, p1);
+		bool inRect = inRectangle(pr, p1 - point2(0.3,0.3), p2 + point2(0.3,0.3)) || inRectangle(pr, p2 - point2(0.3,0.3), p1 + point2(0.3,0.3));
 
-		if (!inRect && ((r1 = min((p1-pr).length(),(p2-pr).length())) < 1) ) { 
-			// Данная точка на боках прямой с прозрачностью
-			return r1;
+		if (!inRect && ((r1 = min((p1-x).length(), (p2-x).length())) <= thick+1)) { 
+			if (r1 > thick) {
+				// Точка на краях прямоугольника
+				r1 -= thick;
+				return 1-r1;
+			} else {
+				// Точка внутри прямоугольника
+				return 1;
+			}
 		}
 		if (inRect) {
 			if (r > thick) {
@@ -392,6 +395,56 @@ double getAlpha(Point x, point2 p1, point2 p2, double thick) {
 	return 0;
 }
 
+double getAlpha1(Point x, point2 p1, point2 p2, double thick) {
+	static double a, b, c, d, r, r1;
+	a = pa_;
+	b = pb_;
+	c = pc_;
+
+	thick *= sab_;
+
+	const double num = 15; // от 0.1 до 15 вклюительно
+
+	// Проекция точки на прямую
+	point2 pr, y;
+
+	int sum = 0;
+	bool inRect;
+	for (int i = 0; i <= num; i++) {
+		for (int j = 0; j <= num; j++) {
+			y = point2(x.x + i/num, x.y + j/num);
+			r = fabs(a*y.x + b*y.y + c);
+			pr = point2( (b*(b*y.x-a*y.y)-a*c)/ab_, 
+					(a*(-b*y.x+a*y.y)-b*c)/ab_);
+			bool inRect = inRectangle(pr, p1 - point2(0.3,0.3), p2 + point2(0.3,0.3)) || inRectangle(pr, p2 - point2(0.3,0.3), p1 + point2(0.3,0.3));
+			if (inRect && r<=thick) {
+				sum++;
+			}
+		}
+	}
+
+		
+	return sum/((num+1)*(num+1));
+}
+
+void getParams(point2 p1, point2 p2) {
+	// Получение параметров прямой
+	static double d;
+	if ((d = p2.x*p1.y-p1.x*p2.y) != 0) {
+		pa_ = (p2.y-p1.y)/d;
+		pb_ = (p1.x-p2.x)/d;
+		pc_ = 1;
+	} else if ((d = p2.y-p1.y) != 0) {
+		pa_ = 1;
+		pb_ = (p1.x-p2.x)/d;
+		pc_ = (p2.x*p1.y-p1.x*p2.y)/d;
+	} else {
+		std::cout << "Points not to line: " << p1 << " " << p2 << std::endl;
+	}
+	ab_ = pa_*pa_ + pb_*pb_;
+	sab_ = sqrt(ab_);
+}
+
 void gwapi::Bufer::lineDraw(point2 p1, point2 p2) {
 	// TODO реализовать
 	// Для того, чтобы нарисовать линию со сглаживанием, можно подойти к рассмотрению степени насыщенности цвета с разных сторон:
@@ -403,13 +456,16 @@ void gwapi::Bufer::lineDraw(point2 p1, point2 p2) {
 	//			Аналитически рассчитать формулы для рассчета идеальной площади которую линия занимает в пикселе.
 	//		В будущем можно будет рассмотреть все эти методы и сравнить качество картинки и скорость работы.
 	//		И уже в итоговый вариант войдет оптимальный по скорости и качеству.
+	p1 = p1 + point2(0.5, 0.5); p2 = p2 + point2(0.5, 0.5);
+	getParams(p1, p2);
+
 	Point p3, p4;
 	createBorders(p1, p2, p3, p4, pen_.thickness, sizex, sizey);
 
 	Color newc;
 	double alpha;
-	for (int i = p3[0]; i < p4[0]; i++) {
-		for (int j = p3[1]; j < p4[1]; j++) {
+	for (int i = p3.x; i < p4.x; i++) {
+		for (int j = p3.y; j < p4.y; j++) {
 			alpha = getAlpha(Point(i, j), p1, p2, pen_.thickness/2.0);
 
 			newc = pen_.color;

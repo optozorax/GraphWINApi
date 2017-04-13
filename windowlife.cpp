@@ -148,8 +148,8 @@ void gwapi::WindowLife::createWindow(WindowType &type, std::string className, DW
 		className.c_str(),
 		type.caption.c_str(),
 		WS_Style,
-		type.position[0], type.position[1],
-		type.size[0], type.size[1],
+		type.position.x, type.position.y,
+		type.size.x, type.size.y,
 		NULL, NULL, GetModuleHandle(NULL), 
 		typePointer
 	);
@@ -199,8 +199,8 @@ LRESULT gwapi::WindowLife::getMinMaxInfo(Window *This, HWND &hwnd, WPARAM &wPara
 	MINMAXINFO *pInfo = (MINMAXINFO *)lParam;
 
 	if (This != 0) {
-		pInfo->ptMinTrackSize = { This->MinSize[0], This->MinSize[1] };
-		pInfo->ptMaxTrackSize = { This->MaxSize[0], This->MaxSize[1] };
+		pInfo->ptMinTrackSize = { This->MinSize.x, This->MinSize.y };
+		pInfo->ptMaxTrackSize = { This->MaxSize.x, This->MaxSize.y };
 	}
 
 	return 0;
