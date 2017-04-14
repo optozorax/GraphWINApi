@@ -33,8 +33,8 @@ void Car::draw(gwapi::Bufer &buf, point2 center, double scale) {
 	static std::vector<Point> pps(12);
 
 	/* Создание векторов, при помощи которых будут формироваться точки. */
-	vcs[0] = point2(size[0], 0)/2.0;
-	vcs[1] = point2(0, size[1])/2.0;
+	vcs[0] = point2(size.x, 0)/2.0;
+	vcs[1] = point2(0, size.y)/2.0;
 	vcs[2] = point2(4, 0)/2.0;
 	vcs[3] = point2(4, 0)/2.0;
 	vcs[3].rotate(wheelAngle);
@@ -65,7 +65,7 @@ void Car::draw(gwapi::Bufer &buf, point2 center, double scale) {
 		ps[i].rotate(angle+M_PI/2);
 		ps[i] = ps[i] + pos;
 		ps[i] = ps[i]*scale + center;
-		to_another(pps[i], ps[i]);
+		pps[i]= ps[i];
 	}
 
 	/* Рисование корпуса. */
@@ -130,13 +130,13 @@ void Car::step(double pedal, double wheel, double brake, double orient) {
 		dpos = point2(sin(angle)*speed*dt, -cos(angle)*speed*dt);
 		dangle = 0;
 	} else {
-		double R1 = size[0]/tan(wheelAngle);
-		double R2 = size[0]/sin(wheelAngle);
+		double R1 = size.x/tan(wheelAngle);
+		double R2 = size.x/sin(wheelAngle);
 		double w = -speed/((R1 + R2)/2.0);
 		double alpha = w*dt;
 
-		point2 x(-R1, -size[0]/2);
-		point2 p1(0,-size[0]/2), p2(0, size[0]/2);
+		point2 x(-R1, -size.x/2);
+		point2 p1(0,-size.x/2), p2(0, size.x/2);
 		p1.rotate(alpha, x);
 		p2.rotate(alpha, x);
 	
@@ -144,7 +144,7 @@ void Car::step(double pedal, double wheel, double brake, double orient) {
 		dpos.rotate(angle);
 
 		p2 = p2 - p1;
-		dangle = atan2(p2[0], p2[1]);
+		dangle = atan2(p2.x, p2.y);
 	}
 
 	pos = pos + dpos;
@@ -165,8 +165,8 @@ int main() {
 	current.canvas.resize(800, 800);
 	current.sizeSet(Point(800, 800));
 
-	const int carLayers = 3;
-	const int carInCircle = 20;
+	const int carLayers = 1;
+	const int carInCircle = 3;
 	const int carNum = carLayers*carInCircle;
 	std::vector<Car> cars(carNum);
 	for (int j = 0; j < carLayers; j++) {
