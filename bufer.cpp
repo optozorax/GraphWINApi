@@ -349,28 +349,28 @@ void createBorders(point2 p1, point2 p2, Point &p3, Point &p4, double thick, int
 
 double pa_, pb_, pc_, ab_, sab_;
 double getAlpha(Point &x1, const point2 &p1, const point2 &p2, double thick) {
+	static point2 pp3(0.3, 0.3);
 	point2 x = x1;
-	x = x + point2(0.5, 0.5);
+	x.x += 0.5;
+	x.y += 0.5;
 
-	double a, b, c, d, r, r1;
-	a = pa_;
-	b = pb_;
-	c = pc_;
+	double r, r1;
 
 	thick = thick-1;
 	if (thick < 0) thick = 0;
 
 	// Расстояние от точки до прямой
-	r = fabs(a*x.x + b*x.y + c)/sab_;
-
-	// Проекция точки на прямую
-	point2 pr = point2(
-		(b*(b*x.x-a*x.y)-a*c)/ab_, 
-		(a*(-b*x.x+a*x.y)-b*c)/ab_);
+	r = fabs(pa_*x.x + pb_*x.y + pc_)/sab_;
 
 	if (r < (thick+1)) { // Точка находится в бесконечном прямоугольнике прямой, образованной отрезком
-		bool inRect = inRectangle(pr, p1 - point2(0.3,0.3), p2 + point2(0.3,0.3)) || inRectangle(pr, p2 - point2(0.3,0.3), p1 + point2(0.3,0.3));
+		// Проекция точки на прямую
+		point2 pr = point2(
+			(pb_*(pb_*x.x-pa_*x.y)-pa_*pc_)/ab_, 
+			(pa_*(-pb_*x.x+pa_*x.y)-pb_*pc_)/ab_);
 
+		bool inRect = inRectangle(pr, p1 - pp3, p2 + pp3) || inRectangle(pr, p2 - pp3, p1 + pp3);
+
+		// Дает закругление на концах
 		if (!inRect && ((r1 = min((p1-x).length(), (p2-x).length())) <= thick+1)) { 
 			if (r1 > thick) {
 				// Точка на краях прямоугольника
@@ -381,6 +381,7 @@ double getAlpha(Point &x1, const point2 &p1, const point2 &p2, double thick) {
 				return 1;
 			}
 		}
+
 		if (inRect) {
 			if (r > thick) {
 				// Точка на краях прямоугольника
@@ -396,6 +397,8 @@ double getAlpha(Point &x1, const point2 &p1, const point2 &p2, double thick) {
 }
 
 double getAlpha1(Point x, point2 p1, point2 p2, double thick) {
+	/* Тупой алгоритм перебора всех точек внутри пикселя для рассчета площади. */
+	/* В десять раз медленней, чем альтернативный. */
 	static double a, b, c, d, r, r1;
 	a = pa_;
 	b = pb_;
@@ -403,7 +406,7 @@ double getAlpha1(Point x, point2 p1, point2 p2, double thick) {
 
 	thick *= sab_;
 
-	const double num = 15; // от 0.1 до 15 вклюительно
+	const double num = 3; // от 0.1 до 15 вклюительно
 
 	// Проекция точки на прямую
 	point2 pr, y;
@@ -422,7 +425,6 @@ double getAlpha1(Point x, point2 p1, point2 p2, double thick) {
 			}
 		}
 	}
-
 		
 	return sum/((num+1)*(num+1));
 }
@@ -446,16 +448,7 @@ void getParams(point2 p1, point2 p2) {
 }
 
 void gwapi::Bufer::lineDraw(point2 p1, point2 p2) {
-	// TODO реализовать
-	// Для того, чтобы нарисовать линию со сглаживанием, можно подойти к рассмотрению степени насыщенности цвета с разных сторон:
-	//		Насыщенность считается как отношение площади которую занимает прямоугольник линии с ее толщиной в данном пикселе к площади пикселя
-	//		Методы рассчета площади:
-	//			Перебираются n x n точек внутри пикселя-квадрата и для каждой рассчитывается, принадлежит ли она данной линии, и уже площадь считается как количество принадлежащих точек
-	//			Пиксель считается кругом, и площадь прямой высчитывается как площадь соответствующего сегмента круга
-	//			Пиксель считается как фигура, задаваемая уравнением x^n + y^n = 1, где n - большое четное число. Тут уже площадь находится через сложный матан.
-	//			Аналитически рассчитать формулы для рассчета идеальной площади которую линия занимает в пикселе.
-	//		В будущем можно будет рассмотреть все эти методы и сравнить качество картинки и скорость работы.
-	//		И уже в итоговый вариант войдет оптимальный по скорости и качеству.
+	// TODO сравнить как будет, если все числа представить в виде дробей с основанием 255
 	p1 = p1 + point2(0.5, 0.5); p2 = p2 + point2(0.5, 0.5);
 	getParams(p1, p2);
 
@@ -463,15 +456,45 @@ void gwapi::Bufer::lineDraw(point2 p1, point2 p2) {
 	createBorders(p1, p2, p3, p4, pen_.thickness, sizex, sizey);
 
 	Color newc;
-	double alpha;
-	for (int i = p3.x; i < p4.x; i++) {
-		for (int j = p3.y; j < p4.y; j++) {
+	double alpha, y1, y2, dc = pen_.thickness/2.0*sab_;
+	int i, j, j1, j2;
+	for (i = p3.x; i < p4.x; i++) {
+		// Тупой алгоритм перебора всех точек
+		/*for (int j = p3.y; j < p4.y; j++) {
 			alpha = getAlpha(Point(i, j), p1, p2, pen_.thickness/2.0);
 
 			newc = pen_.color;
 			newc.m[3] = newc.m[3]*alpha;
 			if (newc.m[3] == 0) newc.m[3] = 1;
 			operator[](Point(i, j)) = gwapi::overlay(newc, operator[](Point(i, j))).clrref;
+		}*/
+
+		// Алгоритм движения из центра к бокам, пока прозрачность не станет равна нулю
+		// Эффективнее по сравнению с обычным во много раз(как минимум в три раза)
+		y1 = (-pc_-pa_*i)/pb_;
+		if (y1<0) y1 = 0;
+		if (y1>sizey) y1 = sizey;
+		if (y1 != y1) y1 = 0;
+		for (int j = y1; j < sizey; j++) {
+			alpha = getAlpha(Point(i, j), p1, p2, pen_.thickness/2.0);
+
+			newc = pen_.color;
+			newc.m[3] = newc.m[3]*alpha;
+			if (newc.m[3] == 0) newc.m[3] = 1;
+			operator[](Point(i, j)) = gwapi::overlay(newc, operator[](Point(i, j))).clrref;
+
+			if (alpha == 0) break;
+		}
+
+		for (int j = y1; j > 1; j--) {
+			alpha = getAlpha(Point(i, j), p1, p2, pen_.thickness/2.0);
+
+			newc = pen_.color;
+			newc.m[3] = newc.m[3]*alpha;
+			if (newc.m[3] == 0) newc.m[3] = 1;
+			operator[](Point(i, j)) = gwapi::overlay(newc, operator[](Point(i, j))).clrref;
+
+			if (alpha == 0) break;
 		}
 	}
 }
