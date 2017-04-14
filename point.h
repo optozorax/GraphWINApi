@@ -9,7 +9,7 @@ public:
 	_point(T = 0, T = 0);
 	
 	T length(void);
-	void rotate(T, _point<T>);
+	void rotate(T, _point<T> = _point<T>());
 
 	template<class T1>
 	operator _point<T1>();
