@@ -30,7 +30,6 @@ Car::Car(point2 sz, point2 ps, double sp, double an, double wh) :
 void Car::draw(gwapi::Bufer &buf, point2 center, double scale) {
 	static std::vector<point2> vcs(4);
 	static std::vector<point2> ps(12);
-	static std::vector<Point> pps(12);
 
 	/* Создание векторов, при помощи которых будут формироваться точки. */
 	vcs[0] = point2(size.x, 0)/2.0;
@@ -65,22 +64,21 @@ void Car::draw(gwapi::Bufer &buf, point2 center, double scale) {
 		ps[i].rotate(angle+M_PI/2);
 		ps[i] = ps[i] + pos;
 		ps[i] = ps[i]*scale + center;
-		pps[i]= ps[i];
 	}
 
 	/* Рисование корпуса. */
 	buf.penSet(gwapi::Bitcoin, 2);
-	buf.lineDraw(pps[0], pps[1]);
-	buf.lineDraw(pps[2], pps[3]);
-	buf.lineDraw(pps[0], pps[2]);
-	buf.lineDraw(pps[1], pps[3]);
+	buf.lineDraw(ps[0], ps[1]);
+	buf.lineDraw(ps[2], ps[3]);
+	buf.lineDraw(ps[0], ps[2]);
+	buf.lineDraw(ps[1], ps[3]);
 
 	/* Рисование колес. */
 	buf.penSet(gwapi::Miku, 3);
-	buf.lineDraw(pps[4], pps[5]);
-	buf.lineDraw(pps[6], pps[7]);
-	buf.lineDraw(pps[8], pps[9]);
-	buf.lineDraw(pps[10], pps[11]);
+	buf.lineDraw(ps[4], ps[5]);
+	buf.lineDraw(ps[6], ps[7]);
+	buf.lineDraw(ps[8], ps[9]);
+	buf.lineDraw(ps[10], ps[11]);
 }
 
 void Car::step(double pedal, double wheel, double brake, double orient) {
@@ -165,8 +163,8 @@ int main() {
 	current.canvas.resize(800, 800);
 	current.sizeSet(Point(800, 800));
 
-	const int carLayers = 1;
-	const int carInCircle = 3;
+	const int carLayers = 5;
+	const int carInCircle = 20;
 	const int carNum = carLayers*carInCircle;
 	std::vector<Car> cars(carNum);
 	for (int j = 0; j < carLayers; j++) {

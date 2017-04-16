@@ -105,11 +105,7 @@ public:
 	//# Когда-нибудь написать интерфейс для работы с рисунками. #//
 
 	friend class Window;
-	friend LRESULT gwapi::WindowLife::create(Window*, HWND&, WPARAM&, LPARAM&);
 };
-
-/* Если объявлен этот дефайн, то в файле реализации имеется main, в котором запускаются тесты этого модуля. */
-//#define __BUFERTEST
 
 }
 

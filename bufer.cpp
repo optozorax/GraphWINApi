@@ -280,12 +280,6 @@ UINT32& Bufer::pixelGet(Point a) {
 }
 
 void Bufer::bezierDraw(std::vector<Point> a, BezierStyle stl) {
-	// TODO реализовать
-	// Последовательность работы:
-	//		Рассчитать длину ломаной по точкам.
-	//		Взять количество итераций = длина\5.
-	//		Рисовать кривую Безье обычным образом по полученному числу итераций при помощи целочисленной прямой.
-
 	double len = 0;
 	for (int i = 0; i < a.size()-1; i++) {
 		len += (a[i]-a[i+1]).length();
@@ -333,22 +327,8 @@ void gwapi::Bufer::circleDraw(point2, double) {
 	// Пиксель окружности можно представлять такими же методами, как и снизу
 }
 
-void createBorders(point2 p1, point2 p2, Point &p3, Point &p4, double thick, int sizex, int sizey) {
-	p3 = Point(min(p1.x, p2.x), min(p1.y, p2.y));
-	p4 = Point(max(p1.x, p2.x), max(p1.y, p2.y));
-
-	p3.x -= thick*1.5 + 3;
-	p3.y -= thick*1.5 + 3;
-	p4.x += thick*1.5 + 3;
-	p4.y += thick*1.5 + 3;
-
-	p4 = p4 - p3;
-	boardsToCorrect(sizex, sizey, p3.x, p3.y, p4.x, p4.y);
-	p4 = p4 + p3;
-}
-
 double pa_, pb_, pc_, ab_, sab_;
-double getAlpha(Point &x1, const point2 &p1, const point2 &p2, double thick) {
+inline double getAlpha(Point &x1, const point2 &first, const point2 &second, double thick) {
 	static point2 pp3(0.3, 0.3);
 	point2 x = x1;
 	x.x += 0.5;
@@ -368,10 +348,11 @@ double getAlpha(Point &x1, const point2 &p1, const point2 &p2, double thick) {
 			(pb_*(pb_*x.x-pa_*x.y)-pa_*pc_)/ab_, 
 			(pa_*(-pb_*x.x+pa_*x.y)-pb_*pc_)/ab_);
 
-		bool inRect = inRectangle(pr, p1 - pp3, p2 + pp3) || inRectangle(pr, p2 - pp3, p1 + pp3);
+		bool inRect = inRectangle(pr, first - pp3, second + pp3) || 
+			inRectangle(pr, second - pp3, first + pp3);
 
 		// Дает закругление на концах
-		if (!inRect && ((r1 = min((p1-x).length(), (p2-x).length())) <= thick+1)) { 
+		if (!inRect && ((r1 = min((first-x).length(), (second-x).length())) <= thick+1)) { 
 			if (r1 > thick) {
 				// Точка на краях прямоугольника
 				r1 -= thick;
@@ -396,30 +377,24 @@ double getAlpha(Point &x1, const point2 &p1, const point2 &p2, double thick) {
 	return 0;
 }
 
-double getAlpha1(Point x, point2 p1, point2 p2, double thick) {
-	/* Тупой алгоритм перебора всех точек внутри пикселя для рассчета площади. */
+inline double getAlpha1(Point &x, const point2 &first, const point2 &second, double thick) {
+	/* Тупой алгоритм перебора всех точек внутри пикселя для расчета площади. */
 	/* В десять раз медленней, чем альтернативный. */
-	static double a, b, c, d, r, r1;
-	a = pa_;
-	b = pb_;
-	c = pc_;
-
+	const double num = 15; // от 0.1 до 15 вклюительно
+	double r;
+	point2 pr, y;
+	bool inRect;
+	int sum = 0;
 	thick *= sab_;
 
-	const double num = 3; // от 0.1 до 15 вклюительно
-
-	// Проекция точки на прямую
-	point2 pr, y;
-
-	int sum = 0;
-	bool inRect;
 	for (int i = 0; i <= num; i++) {
 		for (int j = 0; j <= num; j++) {
 			y = point2(x.x + i/num, x.y + j/num);
-			r = fabs(a*y.x + b*y.y + c);
-			pr = point2( (b*(b*y.x-a*y.y)-a*c)/ab_, 
-					(a*(-b*y.x+a*y.y)-b*c)/ab_);
-			bool inRect = inRectangle(pr, p1 - point2(0.3,0.3), p2 + point2(0.3,0.3)) || inRectangle(pr, p2 - point2(0.3,0.3), p1 + point2(0.3,0.3));
+			r = fabs(pa_*y.x + pb_*y.y + pc_);
+			pr = point2( (pb_*(pb_*y.x-pa_*y.y)-pa_*pc_)/ab_, 
+					(pa_*(-pb_*y.x+pa_*y.y)-pb_*pc_)/ab_);
+			inRect = inRectangle(pr, first - point2(0.3,0.3), second + point2(0.3,0.3)) || 
+				inRectangle(pr, second - point2(0.3,0.3), first + point2(0.3,0.3));
 			if (inRect && r<=thick) {
 				sum++;
 			}
@@ -429,72 +404,119 @@ double getAlpha1(Point x, point2 p1, point2 p2, double thick) {
 	return sum/((num+1)*(num+1));
 }
 
-void getParams(point2 p1, point2 p2) {
+inline void getABCParams(point2 first, point2 second) {
 	// Получение параметров прямой
 	static double d;
-	if ((d = p2.x*p1.y-p1.x*p2.y) != 0) {
-		pa_ = (p2.y-p1.y)/d;
-		pb_ = (p1.x-p2.x)/d;
+	if ((d = second.x*first.y-first.x*second.y) != 0) {
+		pa_ = (second.y-first.y)/d;
+		pb_ = (first.x-second.x)/d;
 		pc_ = 1;
-	} else if ((d = p2.y-p1.y) != 0) {
+	} else if ((d = second.y-first.y) != 0) {
 		pa_ = 1;
-		pb_ = (p1.x-p2.x)/d;
-		pc_ = (p2.x*p1.y-p1.x*p2.y)/d;
+		pb_ = (first.x-second.x)/d;
+		pc_ = (second.x*first.y-first.x*second.y)/d;
 	} else {
-		std::cout << "Points not to line: " << p1 << " " << p2 << std::endl;
+		std::cout << "Points not to line: " << first << " " << second << std::endl;
 	}
 	ab_ = pa_*pa_ + pb_*pb_;
 	sab_ = sqrt(ab_);
 }
 
-void gwapi::Bufer::lineDraw(point2 p1, point2 p2) {
+void createBorders(point2 first, point2 second, Point &start, Point &end, double thick, int sizex, int sizey) {
+	start = Point(min(first.x, second.x), min(first.y, second.y));
+	end = Point(max(first.x, second.x), max(first.y, second.y));
+
+	start.x -= thick*1.5 + 3;
+	start.y -= thick*1.5 + 3;
+	end.x += thick*1.5 + 3;
+	end.y += thick*1.5 + 3;
+
+	if (start.x<0) start.x = 0;
+	if (start.y<0) start.y = 0;
+	if (end.x>sizex) end.x = sizex;
+	if (end.y>sizey) end.y = sizey;
+}
+
+Color newc;
+inline void drawPix(gwapi::Bufer *This, gwapi::Color &pen, Point pos, double &alpha) {
+	newc = pen;
+	newc.m[3] = newc.m[3]*alpha;
+	if (newc.m[3] == 0) newc.m[3] = 1;
+	This->operator[](pos) = gwapi::overlay(newc, This->operator[](pos)).clrref;
+}
+
+inline void getYc(double &yc, int &i, int sizey) {
+	// Получение точки на прямой с текущей координатой x
+	yc = (-pc_-pa_*i)/pb_;
+	if (yc < 0) yc = 0;
+	if (yc > sizey) yc = sizey-1;
+	if (yc != yc) yc = 0;
+}
+
+inline void getXc(double &yc, int &i, int sizey) {
+	// Получение точки на прямой с текущей координатой x
+	yc = (-pc_-pb_*i)/pa_;
+	if (yc < 0) yc = 0;
+	if (yc >= sizey) yc = sizey-1;
+	if (yc != yc) yc = 0;
+}
+
+void gwapi::Bufer::lineDraw(point2 first, point2 second) {
 	// TODO сравнить как будет, если все числа представить в виде дробей с основанием 255
-	p1 = p1 + point2(0.5, 0.5); p2 = p2 + point2(0.5, 0.5);
-	getParams(p1, p2);
 
-	Point p3, p4;
-	createBorders(p1, p2, p3, p4, pen_.thickness, sizex, sizey);
+	if (first.x>second.x) std::swap(first, second);
+	double thick = pen_.thickness/2.0;
+	double (*gtAlpha)(Point&, const point2&, const point2&, double) = &getAlpha;
+	//if (thick<1) gtAlpha = &getAlpha1;
 
-	Color newc;
-	double alpha, y1, y2, dc = pen_.thickness/2.0*sab_;
-	int i, j, j1, j2;
-	for (i = p3.x; i < p4.x; i++) {
-		// Тупой алгоритм перебора всех точек
-		/*for (int j = p3.y; j < p4.y; j++) {
-			alpha = getAlpha(Point(i, j), p1, p2, pen_.thickness/2.0);
+	first = first + point2(0.5, 0.5); 
+	second = second + point2(0.5, 0.5);
+	getABCParams(first, second);
 
-			newc = pen_.color;
-			newc.m[3] = newc.m[3]*alpha;
-			if (newc.m[3] == 0) newc.m[3] = 1;
-			operator[](Point(i, j)) = gwapi::overlay(newc, operator[](Point(i, j))).clrref;
-		}*/
+	Point start, end;
+	createBorders(first, second, start, end, thick, sizex-1, sizey-1);
 
-		// Алгоритм движения из центра к бокам, пока прозрачность не станет равна нулю
-		// Эффективнее по сравнению с обычным во много раз(как минимум в три раза)
-		y1 = (-pc_-pa_*i)/pb_;
-		if (y1<0) y1 = 0;
-		if (y1>sizey) y1 = sizey;
-		if (y1 != y1) y1 = 0;
-		for (int j = y1; j < sizey; j++) {
-			alpha = getAlpha(Point(i, j), p1, p2, pen_.thickness/2.0);
+	double alpha, yc;
+	int i, j;
+	if (abs(second.x-first.x)>abs(second.y-first.y)) {
+		for (i = start.x; i < end.x; i++) {
+			// Алгоритм движения из центра к бокам, пока прозрачность не станет равна нулю
+			// Эффективнее по сравнению с обычным во много раз(как минимум в три раза)
+			getYc(yc, i, sizey-1);
 
-			newc = pen_.color;
-			newc.m[3] = newc.m[3]*alpha;
-			if (newc.m[3] == 0) newc.m[3] = 1;
-			operator[](Point(i, j)) = gwapi::overlay(newc, operator[](Point(i, j))).clrref;
+			for (j = yc; j < sizey-1; j++) {
+				alpha = gtAlpha(Point(i, j), first, second, thick);
 
-			if (alpha == 0) break;
+				drawPix(this, pen_.color, Point(i,j), alpha);
+				if (alpha == 0) break;
+			}
+
+			for (j = yc; j > 1; j--) {
+				alpha = gtAlpha(Point(i, j), first, second, thick);
+
+				drawPix(this, pen_.color, Point(i,j), alpha);
+				if (alpha == 0) break;
+			}
 		}
+	} else {
+		for (j = start.y; j < end.y; j++) {
+			// Алгоритм движения из центра к бокам, пока прозрачность не станет равна нулю
+			// Эффективнее по сравнению с обычным во много раз(как минимум в три раза)
+			getXc(yc, j, sizex-1);
 
-		for (int j = y1; j > 1; j--) {
-			alpha = getAlpha(Point(i, j), p1, p2, pen_.thickness/2.0);
+			for (i = yc; i < sizex-1; i++) {
+				alpha = gtAlpha(Point(i, j), first, second, thick);
 
-			newc = pen_.color;
-			newc.m[3] = newc.m[3]*alpha;
-			if (newc.m[3] == 0) newc.m[3] = 1;
-			operator[](Point(i, j)) = gwapi::overlay(newc, operator[](Point(i, j))).clrref;
+				drawPix(this, pen_.color, Point(i,j), alpha);
+				if (alpha == 0) break;
+			}
 
-			if (alpha == 0) break;
+			for (i = yc; i > 1; i--) {
+				alpha = gtAlpha(Point(i, j), first, second, thick);
+
+				drawPix(this, pen_.color, Point(i,j), alpha);
+				if (alpha == 0) break;
+			}
 		}
 	}
 }
@@ -507,33 +529,3 @@ void gwapi::Bufer::polyDraw(std::vector<point2> mas) {
 }
 
 }
-
-#ifdef __BUFERTEST
-using namespace gwapi;
-#include <windows.h>
-#include <iostream>
-#include <stdlib.h>
-int main() {
-	Bufer a(300,300), b(300, 300), currConsole(GetDC(GetConsoleWindow()));
-
-	b.clear(Transparent);
-	b.brushSet(argb(128,128,0,128));
-	b.penSet(rgb(255,0,0), 2);
-	b.rectDraw(Point(100, 100), Point(170, 170));
-
-	a.clear();
-	a.penSet(rgb(128,0,128), 3);
-	a.lineDraw(Point(100,100), Point(200,200));
-	a.lineDraw(Point(100,200), Point(200,100));
-	a.circleDraw(Point(150,150), 50);
-	a.textStyle(14, "Times New Roman");
-	a.textOut(Point(100,100), string("TEXT TEST"));
-
-	b.drawAlphaTo(a);
-
-	a.drawTo(currConsole);
-	b.drawTo(currConsole, 300);
-	system("pause");
-	return 0;
-}
-#endif
