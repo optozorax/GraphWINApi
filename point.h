@@ -92,7 +92,12 @@ inline _point<T> operator-(_point<T> a) {
 
 template<class T>
 inline bool inRectangle(_point<T> x, _point<T> a, _point<T> b) {
-	return (x.x >= a.x) && (x.x <= b.x) && (x.y >= a.y) && (x.y <= b.y);
+	_point<T> c, d;
+	c.x = min(a.x, b.x);
+	c.y = min(a.y, b.y);
+	d.x = max(a.x, b.x);
+	d.y = max(a.y, b.y);
+	return (x.x >= c.x) && (x.x <= d.x) && (x.y >= c.y) && (x.y <= d.y);
 }
 
 template<class T>
