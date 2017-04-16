@@ -10,6 +10,7 @@ gwapi::WinEvents::WinEvents() :
 	keyboard(NULL),
 	mouse(NULL),
 	activate(NULL),
+	comand(NULL),
 	close(NULL) {
 }
 
@@ -56,6 +57,25 @@ void gwapi::Window::taskbarColor(TaskbarColor clr) {
 	}
 }
 
+void gwapi::Window::Init(WindowType *curWin, HWND hwnd) {
+	hwnd_ = hwnd;
+	hdc_ = GetDC(hwnd);
+
+	sizeSet(curWin->size);
+	current_.hdc_ = hdc_;
+
+	menu.hmenu_ = CreateMenu();
+	sysMenu.hmenu_ = GetSystemMenu(hwnd_, false);
+	SetMenu(hwnd_, menu.hmenu_);
+
+	if (pTaskbarList == NULL) {
+		CoInitialize(NULL);
+		wm_create_mess = RegisterWindowMessage("TaskbarButtonCreated");
+	} 
+
+	delete curWin;
+}
+
 gwapi::Window::Window(WindowType type) :
 	canvas(type.size.x+50, type.size.y+50), 
 	MinSize(type.minSize), 
@@ -77,8 +97,22 @@ gwapi::Window::~Window() {
 	DeleteDC(hdc_);
 }
 
+void gwapi::Window::drawMenu(Point x, Menu mn) {
+	RECT rcClient, rcWindow;
+	GetWindowRect(hwnd_, &rcWindow);
+	GetClientRect(hwnd_, &rcClient);
+	int xx = ((rcWindow.right-rcWindow.left) - rcClient.right)/2;
+	int yy = ((rcWindow.bottom-rcWindow.top) - rcClient.bottom) - xx;
+	TrackPopupMenuEx(mn.hmenu_, TPM_LEFTALIGN | TPM_TOPALIGN, 
+		x.x + rcWindow.left + xx, x.y + rcWindow.top + yy, hwnd_, NULL);
+}
+
 void gwapi::Window::redraw(void) {
 	canvas.drawTo(current_);
+}
+
+void gwapi::Window::redrawMenu(void) {
+	DrawMenuBar(hwnd_);
 }
 
 void gwapi::Window::sizeSet(Point sz) {

@@ -11,6 +11,7 @@
 #include "bufer.h"
 #include "windowlife.h"
 #include "winevents.h"
+#include "menu.h"
 
 namespace gwapi{
 
@@ -38,24 +39,29 @@ public:
 };
 
 class Window {
-	HWND hwnd_;
 	HDC hdc_;
 	Bufer current_;
 
 	LONG_PTR WS_Style;
 	static UINT wm_create_mess;
 	static ITaskbarList3 *pTaskbarList;
+
+	void Init(WindowType*, HWND);
 public:
+	HWND hwnd_;
 	WinEvents ev;
 	Bufer canvas;
+	Menu menu, sysMenu;
 
 	Point MinSize;
 	Point MaxSize;
 	
 	Window(WindowType = WindowType());
 	~Window();
-	
+
+	void drawMenu(Point, Menu);
 	void redraw(void);
+	void redrawMenu(void);
 	
 	void sizeSet(Point);
 	Point sizeGet(void);
@@ -70,8 +76,6 @@ public:
 	static unsigned long timeGet(void);
 	static bool isKeyDown(int);
 	static void sleep(unsigned long);
-	
-	//# Когда-нибудь сделать интерфейс для работы с потоками, возможно отдельный класс. #//
 
 	friend LRESULT WindowLife::create(Window*, HWND&, WPARAM&, LPARAM&);
 	friend DWORD WINAPI WindowLife::windowMainThread(LPVOID);

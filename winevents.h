@@ -46,6 +46,7 @@ public:
 	void (*keyboard)(Window*, int, bool);
 	void (*mouse)(Window*, int, int,  MouseType, int);
 	void (*activate)(Window*, bool, bool);
+	void (*comand)(Window*, int);
 	void (*close)(Window*);
 
 	WinEvents();

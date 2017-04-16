@@ -264,26 +264,14 @@ LRESULT gwapi::WindowLife::close(Window *This, HWND &hwnd, WPARAM &wParam, LPARA
 
 LRESULT gwapi::WindowLife::create(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam) {
 	/* Вызывается, когда должно быть создано окно. */
-
 	extern std::map<HWND, Window*> WindowMap_;
 
-	WindowType curWin = *((WindowType*) ((CREATESTRUCT*)lParam)->lpCreateParams);
-	This = curWin.This;
+	WindowType *curWin = ((WindowType*) ((CREATESTRUCT*)lParam)->lpCreateParams);
+	This = curWin->This;
 
 	WindowMap_[hwnd] = This;
 
-	This->hwnd_ = hwnd;
-	This->hdc_ = GetDC(hwnd);
-
-	This->sizeSet(curWin.size);
-	This->current_.hdc_ = This->hdc_;
-
-	if (This->pTaskbarList == NULL) {
-		CoInitialize(NULL);
-		This->wm_create_mess = RegisterWindowMessage("TaskbarButtonCreated");
-	} 
-
-	delete (WindowType*) ((CREATESTRUCT*)lParam)->lpCreateParams;
+	This->Init(curWin, hwnd);
 
 	return 0;
 }
@@ -304,9 +292,8 @@ LRESULT gwapi::WindowLife::paint(Window *This, HWND &hwnd, WPARAM &wParam, LPARA
 
 LRESULT gwapi::WindowLife::comand(Window *This, HWND &hwnd, WPARAM &wParam, LPARAM &lParam) {
 	/* Сообщение отправляется тогда, когда пользователь выбирает командный пункт из меню или происходит нажатие на кнопку и т.д. */
-	// TODO
-	switch ( LOWORD(wParam) ) {
-	}; 
+	if (This->ev.comand != NULL)
+		(*(This->ev.comand))(This, LOWORD(wParam));
 	return 0;
 }
 
