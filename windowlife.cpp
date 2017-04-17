@@ -121,11 +121,14 @@ std::string gwapi::WindowLife::registerClass(WindowType &type) {
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = GetModuleHandle(NULL);
-	wc.hIcon = LoadIcon( NULL, IDI_APPLICATION );
+	if (type.icon == -1)
+		wc.hIcon = LoadIcon( NULL, IDI_APPLICATION );
+	else
+		wc.hIcon =  LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(type.icon));
 	wc.hCursor = LoadCursor( NULL, IDC_ARROW );
 	wc.hbrBackground = CreateSolidBrush(RGB(255,255,255));
 	wc.lpszMenuName = NULL;
-	wc.hIconSm = LoadIcon( NULL, IDI_APPLICATION );
+	wc.hIconSm = wc.hIcon;
 
 	if (type.flags.dropShadow)
 		wc.style |= CS_DROPSHADOW;

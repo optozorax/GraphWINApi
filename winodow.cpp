@@ -21,7 +21,8 @@ gwapi::WindowType::WindowType() :
 		minSize(Point(0,0)), 
 		maxSize(Point(2000,2000)),
 		caption("GraphWinAPI program"),
-		style(Standart)
+		style(Standart),
+		icon(-1)
 {
 	flags = {};
 }

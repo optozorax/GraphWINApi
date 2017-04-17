@@ -21,6 +21,7 @@ public:
 	Point position, size;
 	Point minSize, maxSize;
 	std::string caption;
+	int icon;
 
 	struct {
 		unsigned int dropShadow : 1;
