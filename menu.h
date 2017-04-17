@@ -6,8 +6,8 @@ namespace gwapi {
 class Menu;
 
 enum MenuType {
-	PopupMenu, Line, Line2BMP, 
-	Separator, Break
+	PopupMenu, Separator, 
+	Line, Line2BMP
 };
 
 class MenuLine {
@@ -21,12 +21,11 @@ public:
 	struct {
 		bool checked;
 		bool grayed;
-		bool disabled;
 		bool rightAlign;
 	} flags;
 	
-	MenuLine(Menu, std::string, bool = false, bool = false, bool = false, bool = false);
-	MenuLine(MenuType, std::string = std::string(), unsigned int = 0, bool = false, bool = false, bool = false, bool = false);
+	MenuLine(Menu, std::string, bool = false, bool = false, bool = false);
+	MenuLine(MenuType, std::string = std::string(), unsigned int = 0, bool = false, bool = false, bool = false);
 	
 	MenuLine& SetIcon(int);
 	MenuLine& SetTwoIcons(int, int);
