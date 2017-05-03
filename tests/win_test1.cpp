@@ -11,9 +11,9 @@ int main() {
 
 	btype.caption = "SCND WNDW, Русские символы";
 	btype.style = gwapi::WindowType::Tool;
-	btype.position = atype.position + Point(atype.size[0]+20,0);
+	btype.position = atype.position + Point(atype.size.x+20,0);
 
-	ctype.position = btype.position + Point(btype.size[0]+20,0);
+	ctype.position = btype.position + Point(btype.size.x+20,0);
 	ctype.style = gwapi::WindowType::Caption;
 
 	gwapi::Window a(atype);

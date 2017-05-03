@@ -88,7 +88,7 @@ void Bezier::draw(gwapi::Bufer &buf, bool color) {
 	/* Рисуем окружности. */
 	buf.penSet(crclClr, color + 1);
 	for (int i = 0; i < a_.size(); i++) {
-		buf.circleDraw(a_[i], poRadius);
+		buf.circleDraw(a_[i], int(poRadius));
 	}
 }
 
@@ -165,18 +165,18 @@ void BezierInterface::draw(gwapi::Bufer &buf, Point mousePos, bool color) {
 		int num = bz.numPoint(mousePos);
 		if (num != -1) {
 			buf.penSet(gwapi::Bitcoin, 2);
-			buf.circleDraw(bz.getCenter(num), poRadius);
+			buf.circleDraw(bz.getCenter(num), int(poRadius));
 		}
 	}
 }
 
 void BezierInterface::mouseWheel(Point x, int wh) {
 	point2 b, c;
-	to_another(c, x);
+	c = x;
 	for (int i = 0; i < bz.size(); i++) {
-		to_another(b, bz.getCenter(i));
+		b = bz.getCenter(i);
 		b.rotate((wh)/120.0/180.0*M_PI, c);
-		to_another(bz.getCenter(i), b);
+		bz.getCenter(i) = b;
 	}
 }
 

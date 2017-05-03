@@ -93,10 +93,10 @@ void fpsDraw(gwapi::Window &a, DWORD &time, double angle) {
 	if ((int)(angle/angleSpeed)%50 == 0) {
 		time = a.timeGet() - time; if (time == 0) time = 1;
 		fps = 1000.0*50.0/time;
-		printf((to_string(fps) + " FPS\n").c_str());
+		printf((std::to_string(fps) + " FPS\n").c_str());
 	}
 	a.canvas.penSet(gwapi::Black);
-	a.canvas.textOut(Point(0,0), to_string(fps) + " FPS");
+	a.canvas.textOut(Point(0,0), std::to_string(fps) + " FPS");
 };
 
 int main() {
