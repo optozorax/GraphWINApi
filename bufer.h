@@ -47,19 +47,28 @@ public:
 class Bufer {
 	HDC hdc_;
 	HBITMAP hbmp_;
-	UINT32 *mas_;
-	int sizex, sizey;
 	Pen pen_;
 	Brush brush_;
+	UINT32 *mas_;
+	int sizex, sizey;
 public:
 	Bufer(int = 1000, int = 1000);
 	Bufer(HDC);
-	//Bufer(const Bufer&);
 	~Bufer();
 
 	void resize(int = 1000, int = 1000);
 
 	// TODO подумать насчет копирования буфера
+	//Bufer(const Bufer&);
+
+	/* Работа низкоуровневой частью. */
+	unsigned width(void);
+	unsigned height(void);
+	Color* buf(void);
+
+	/* Работа с BMP. */
+	void readFromBMP(std::string);
+	void writeToBMP(std::string, bool);
 	
 	/* Работа с другими буферами. */
 	void drawTo(Bufer&, int x = 0, int y = 0, int width = 0, int height = 0);
@@ -77,8 +86,6 @@ public:
 	void textOut(Point, std::string, TextWriteStyle = LeftUp);
 	Point textSize(std::string);
 	void textStyle(StyleText);
-	
-	// TODO Понять: надо ли объединить два последующих блока, и различать их только дефайнами или флагами?
 
 	/* Примитивы на основе функций Windows. Без сглаживания и прозрачных цветов. */
 	/* Максимальная скорость рисования. */
@@ -99,8 +106,8 @@ public:
 	void bezierDraw(std::vector<point2>, BezierStyle = Default);
 
 	/* Обращение к соответствующему пикселю для изменения или чтения. */
-	UINT32& pixelGet(Point); // С проверкой выхода за границы
-	UINT32& operator[](Point); // Без проверки выхода за границы
+	Color& pixelGet(Point); // С проверкой выхода за границы
+	Color& operator[](Point); // Без проверки выхода за границы
 
 	//# Когда-нибудь написать интерфейс для работы с рисунками. #//
 

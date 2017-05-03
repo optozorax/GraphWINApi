@@ -1,6 +1,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include "bufer.h"
+#include "EasyBMP\\EasyBMP.h"
+#include "color.h"
 
 namespace gwapi{
 
@@ -88,6 +90,91 @@ Bufer::Bufer(HDC hdc) {
 	penSet(Black);
 }
 
+unsigned Bufer::width(void) {
+	return sizex;
+}
+
+unsigned Bufer::height(void) {
+	return sizey;
+}
+
+Color* Bufer::buf(void) {
+	return (Color*) mas_;
+}
+
+void gwapi::Bufer::readFromBMP(std::string file) {
+	BMP AnImage;
+	AnImage.ReadFromFile(file.c_str());
+
+	resize(AnImage.TellWidth(), AnImage.TellHeight());
+
+	if (AnImage.TellBitDepth() <= 24) {
+		AnImage.SetBitDepth(32);
+		RGBApixel pix;
+		for (size_t i = 0; i < AnImage.TellWidth(); i++) {
+			for (size_t j = 0; j < AnImage.TellHeight(); j++) {
+				pix = AnImage.GetPixel(i, j);
+				pix.Alpha = 255;
+
+				operator[](Point(i, j)) = rgb(pix.Red, pix.Green, pix.Blue).clrref;
+			}
+		}
+	} else {
+		RGBApixel pix;
+		for (size_t i = 0; i < AnImage.TellWidth(); i++) {
+			for (size_t j = 0; j < AnImage.TellHeight(); j++) {
+				pix = AnImage.GetPixel(i, j);
+
+				operator[](Point(i, j)) = argb(pix.Alpha, pix.Red, pix.Green, pix.Blue).clrref;
+			}
+		}
+	}
+}
+
+void gwapi::Bufer::writeToBMP(std::string file, bool writeAlpha) {
+	if (writeAlpha) {
+		BMP AnImage;
+		AnImage.SetBitDepth(32);
+		AnImage.SetSize(sizex, sizey);
+
+		RGBApixel pix;
+		Color mypix;
+		for (size_t i = 0; i < AnImage.TellWidth(); i++) {
+			for (size_t j = 0; j < AnImage.TellHeight(); j++) {
+				mypix = operator[](Point(i,j));
+
+				pix.Alpha = mypix.m[3];
+				pix.Blue = mypix.m[0];
+				pix.Red = mypix.m[2];
+				pix.Green = mypix.m[1];
+
+				AnImage.SetPixel(i, j, pix);
+			}
+		}
+
+		AnImage.WriteToFile(file.c_str());
+	} else {
+		BMP AnImage;
+		AnImage.SetSize(sizex, sizey);
+
+		RGBApixel pix;
+		Color mypix;
+		for (size_t i = 0; i < AnImage.TellWidth(); i++) {
+			for (size_t j = 0; j < AnImage.TellHeight(); j++) {
+				mypix = operator[](Point(i,j));
+
+				pix.Blue = mypix.m[0];
+				pix.Red = mypix.m[2];
+				pix.Green = mypix.m[1];
+
+				AnImage.SetPixel(i, j, pix);
+			}
+		}
+
+		AnImage.WriteToFile(file.c_str());
+	}
+}
+
 Bufer::~Bufer() {
 	DeleteObject(hbmp_);
 	DeleteDC(hdc_);
@@ -117,12 +204,12 @@ void boardsToCorrect(int sizex, int sizey, int &x, int &y, int &width, int &heig
 }
 
 void Bufer::drawTo(Bufer &a, int x, int y, int width, int height) {
-	boardsToCorrect(sizex, sizey, x, y, width, height);
+	boardsToCorrect(a.sizex, a.sizey, x, y, width, height);
 	BitBlt(a.hdc_, x, y, width, height, hdc_, 0, 0, SRCCOPY);
 }
 
 void Bufer::drawAlphaTo(Bufer &a, int x, int y, int width, int height) {
-	boardsToCorrect(sizex, sizey, x, y, width, height);
+	boardsToCorrect(a.sizex, a.sizey, x, y, width, height);
 
 	/* —амо рисование с прозрачностью. */
 	Point c, d;
@@ -157,7 +244,10 @@ Pen Bufer::penSet(Color clr, double thick) {
 	pen_.color = clr;
 	pen_.thickness = thick;
 	
-	DeleteObject(SelectObject(hdc_, CreatePen(PS_SOLID, (int) thick, toWindowsColor(clr))));
+	if (clr.clrref == Transparent.clrref)
+		DeleteObject(SelectObject(hdc_, CreatePen(PS_NULL, 0, 0)));
+	else 
+		DeleteObject(SelectObject(hdc_, CreatePen(PS_SOLID, (int) thick, toWindowsColor(clr))));
 
 	SetTextColor(hdc_, toWindowsColor(clr));
 	
@@ -168,8 +258,11 @@ Brush Bufer::brushSet(Color clr) {
 	Brush a1 = brush_;
 	
 	brush_ = clr;
-	
-	DeleteObject(SelectObject(hdc_, CreateSolidBrush(toWindowsColor(clr))));
+	SetBkMode(hdc_, TRANSPARENT);
+	if (clr.clrref == Transparent.clrref)
+		DeleteObject(SelectObject(hdc_, GetSysColorBrush(NULL_BRUSH)));
+	else 
+		DeleteObject(SelectObject(hdc_, CreateSolidBrush(toWindowsColor(clr))));
 	
 	return a1;
 }
@@ -236,11 +329,6 @@ void Bufer::pixelDraw(Point x, Color c) {
 }
 
 void Bufer::rectDraw(Point a, Point b) {
-	/*for (int i = a.x; i < b.x; i++) {
-		for (int j = a.y; j < b.y; j++) {
-			operator[](Point(i, j)) = brush_.clrref;
-		}
-	}*/
 	PatBlt(hdc_, a.x, a.y, b.x-a.x, b.y-a.y, PATCOPY);
 	lineDraw(a, Point(b.x, a.y));
 	lineDraw(a, Point(a.x, b.y));
@@ -262,15 +350,15 @@ void gwapi::Bufer::polyDraw(std::vector<Point> mas) {
 	for (int i = 0; i < mas.size(); i++) {
 		mas1[i] = {mas[i].x, mas[i].y};
 	}
-	Polyline(hdc_, mas1, mas.size());
+	Polygon(hdc_, mas1, mas.size());
 	delete mas1;
 }
 
-inline UINT32& Bufer::operator[](Point a) {
-	return mas_[a.x + sizey*a.y];
+inline Color& Bufer::operator[](Point a) {
+	return (Color) mas_[a.x + sizex*a.y];
 }
 
-UINT32& Bufer::pixelGet(Point a) {
+Color& Bufer::pixelGet(Point a) {
 	if (inRectangle(a, Point(sizex,sizey),Point(0,0))) {
 		return operator[](a);
 	} else {
@@ -312,11 +400,16 @@ void gwapi::Bufer::pixelDraw(point2, Color) {
 	//		и там уже считаетс€ какую площадь занимает некотора€ часть этого пиксел€. ¬ итоге он рисует на четыре пиксел€.
 }
 
-void gwapi::Bufer::rectDraw(point2, point2) {
+void gwapi::Bufer::rectDraw(point2 a, point2 b) {
 	// TODO реализовать
 	// ƒл€ того, чтобы нарисовать пр€моугольник с вещественными координатами надо: 
 	//		Ќарисовать его внутреннюю часть
 	//		јналогичным образом с окружностью рисовать границу и внутреннюю часть.
+	for (int i = a.x; i < b.x; i++) {
+		for (int j = a.y; j < b.y; j++) {
+			operator[](Point(i, j)) = brush_.clrref;
+		}
+	}
 }
 
 void gwapi::Bufer::circleDraw(point2, double) {
@@ -449,7 +542,7 @@ inline void getYc(double &yc, int &i, int sizey) {
 	// ѕолучение точки на пр€мой с текущей координатой x
 	yc = (-pc_-pa_*i)/pb_;
 	if (yc < 0) yc = 0;
-	if (yc > sizey) yc = sizey-1;
+	if (yc > sizey + 0.5) yc = sizey-1;
 	if (yc != yc) yc = 0;
 }
 
@@ -479,19 +572,19 @@ void gwapi::Bufer::lineDraw(point2 first, point2 second) {
 	double alpha, yc;
 	int i, j;
 	if (abs(second.x-first.x)>abs(second.y-first.y)) {
-		for (i = start.x; i < end.x; i++) {
+		for (i = start.x; i <= end.x; i++) {
 			// јлгоритм движени€ из центра к бокам, пока прозрачность не станет равна нулю
 			// Ёффективнее по сравнению с обычным во много раз(как минимум в три раза)
 			getYc(yc, i, sizey-1);
 
-			for (j = yc; j < sizey-1; j++) {
+			for (j = yc; j <= sizey-1; j++) {
 				alpha = gtAlpha(Point(i, j), first, second, thick);
 
 				drawPix(this, pen_.color, Point(i,j), alpha);
 				if (alpha == 0) break;
 			}
 
-			for (j = yc; j > 1; j--) {
+			for (j = yc-1; j > 0; j--) {
 				alpha = gtAlpha(Point(i, j), first, second, thick);
 
 				drawPix(this, pen_.color, Point(i,j), alpha);
@@ -499,7 +592,7 @@ void gwapi::Bufer::lineDraw(point2 first, point2 second) {
 			}
 		}
 	} else {
-		for (j = start.y; j < end.y; j++) {
+		for (j = start.y; j <= end.y; j++) {
 			// јлгоритм движени€ из центра к бокам, пока прозрачность не станет равна нулю
 			// Ёффективнее по сравнению с обычным во много раз(как минимум в три раза)
 			getXc(yc, j, sizex-1);
@@ -511,7 +604,7 @@ void gwapi::Bufer::lineDraw(point2 first, point2 second) {
 				if (alpha == 0) break;
 			}
 
-			for (i = yc; i > 1; i--) {
+			for (i = yc-1; i > 1; i--) {
 				alpha = gtAlpha(Point(i, j), first, second, thick);
 
 				drawPix(this, pen_.color, Point(i,j), alpha);
