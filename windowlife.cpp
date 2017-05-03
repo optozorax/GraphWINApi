@@ -202,8 +202,14 @@ LRESULT gwapi::WindowLife::getMinMaxInfo(Window *This, HWND &hwnd, WPARAM &wPara
 	MINMAXINFO *pInfo = (MINMAXINFO *)lParam;
 
 	if (This != 0) {
-		pInfo->ptMinTrackSize = { This->MinSize.x, This->MinSize.y };
-		pInfo->ptMaxTrackSize = { This->MaxSize.x, This->MaxSize.y };
+		RECT rcClient, rcWindow;
+		POINT ptDiff;
+		GetClientRect( This->hwnd_, &rcClient );
+		GetWindowRect( This->hwnd_, &rcWindow );
+		ptDiff.x = (rcWindow.right - rcWindow.left) - rcClient.right;
+		ptDiff.y = (rcWindow.bottom - rcWindow.top) - rcClient.bottom;
+		pInfo->ptMinTrackSize = { This->MinSize.x + ptDiff.x, This->MinSize.y+ptDiff.y };
+		pInfo->ptMaxTrackSize = { This->MaxSize.x + ptDiff.x, This->MaxSize.y+ptDiff.y };
 	}
 
 	return 0;

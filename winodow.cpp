@@ -90,7 +90,8 @@ gwapi::Window::Window(WindowType type) :
 	CreateThread( NULL, 0, &WindowLife::windowMainThread, type1, 0, NULL);
 
 	// Костыль, чтобы программа выходила из инициализации, только когда получит таскбар
-	while (pTaskbarList == 0) Sleep(1);
+	if (type.style == WindowType::Standart)
+		while (pTaskbarList == 0) Sleep(1);
 }
 
 gwapi::Window::~Window() {
@@ -147,26 +148,28 @@ void gwapi::Window::fullscreen(bool state) {
 	wnplc.length = sizeof(WINDOWPLACEMENT);
 	static bool nowState = false;
 
-	if (state) {
-		if (!nowState) {
-			pTaskbarList->MarkFullscreenWindow(hwnd_, TRUE);
-			GetWindowPlacement(hwnd_, &wnplc);
-			SetWindowLongPtr(hwnd_, GWL_STYLE, WS_POPUP | (WS_Style & (WS_VSCROLL | WS_HSCROLL)));
-			UpdateWindow(hwnd_);
-			ShowWindow(hwnd_, SW_MAXIMIZE);
-			SetFocus(hwnd_);	
-			nowState = TRUE;
+	if (pTaskbarList != NULL) {
+		if (state) {
+			if (!nowState) {
+				pTaskbarList->MarkFullscreenWindow(hwnd_, TRUE);
+				GetWindowPlacement(hwnd_, &wnplc);
+				SetWindowLongPtr(hwnd_, GWL_STYLE, WS_POPUP | (WS_Style & (WS_VSCROLL | WS_HSCROLL)));
+				UpdateWindow(hwnd_);
+				ShowWindow(hwnd_, SW_MAXIMIZE);
+				SetFocus(hwnd_);	
+				nowState = TRUE;
+			};
+		} else {
+			if (nowState) {
+				pTaskbarList->MarkFullscreenWindow(hwnd_, FALSE);
+				SetWindowLongPtr(hwnd_, GWL_STYLE, WS_Style);
+				UpdateWindow(hwnd_);
+				SetWindowPlacement(hwnd_, &wnplc);
+				SetFocus(hwnd_);
+				nowState = FALSE;
+			};
 		};
-	} else {
-		if (nowState) {
-			pTaskbarList->MarkFullscreenWindow(hwnd_, FALSE);
-			SetWindowLongPtr(hwnd_, GWL_STYLE, WS_Style);
-			UpdateWindow(hwnd_);
-			SetWindowPlacement(hwnd_, &wnplc);
-			SetFocus(hwnd_);
-			nowState = FALSE;
-		};
-	};
+	}
 }
 
 bool gwapi::Window::isKeyDown(int key) {
