@@ -1,16 +1,16 @@
 #include <windows.h>
 #include "color.h"
 
-gwapi::Color gwapi::rgb(const int r, const int g, const int b) {
-	Color c;
+wgs::color wgs::rgb(const int r, const int g, const int b) {
+	color c;
 	c.m[3] = 255;
 	c.m[2] = r;
 	c.m[1] = g;
 	c.m[0] = b;
 	return c;
 };
-gwapi::Color gwapi::argb(const int a, const int r, const int g, const int b) {
-	Color c;
+wgs::color wgs::argb(const int a, const int r, const int g, const int b) {
+	color c;
 	c.m[3] = a;
 	c.m[2] = r;
 	c.m[1] = g;
@@ -18,9 +18,9 @@ gwapi::Color gwapi::argb(const int a, const int r, const int g, const int b) {
 	return c;
 };
 
-gwapi::Color gwapi::gray(const double a, const bool cycle) {
+wgs::color wgs::gray(const double a, const bool cycle) {
 	/* Ќачинаетс€ с черного, заканчиваетс€ белым. */
-	std::vector<Color> clrs(2);
+	std::vector<color> clrs(2);
 	clrs[0] = Black;
 	clrs[1] = White;
 
@@ -28,9 +28,9 @@ gwapi::Color gwapi::gray(const double a, const bool cycle) {
 };
 
 
-gwapi::Color gwapi::rainbow(const double a, const bool cycle) {
+wgs::color wgs::rainbow(const double a, const bool cycle) {
 	/* Ќачинаетс€ с красного, заканчиваетс€ фиолетовым. */
-	std::vector<Color> clrs(7);
+	std::vector<color> clrs(7);
 	clrs[0] = Red;
 	clrs[1] = Orange;
 	clrs[2] = Yellow;
@@ -42,7 +42,7 @@ gwapi::Color gwapi::rainbow(const double a, const bool cycle) {
 	return gradient(a, cycle, clrs);
 };
 
-gwapi::Color gwapi::gradient(const double a, const bool cycle, const std::vector<Color> clrs, std::vector<double> lengths) {
+wgs::color wgs::gradient(const double a, const bool cycle, const std::vector<color> clrs, std::vector<double> lengths) {
 	register int n = clrs.size();
 	register double col = abs(a);
 	if (cycle) {
@@ -73,9 +73,9 @@ gwapi::Color gwapi::gradient(const double a, const bool cycle, const std::vector
 	return rgb(r,g,b);
 };
 
-gwapi::Color gwapi::overlay(Color a, Color b) {
+wgs::color wgs::overlay(color a, color b) {
 	/* ѕервый пиксель находитс€ над вторым. */
-	Color c;
+	color c;
 	
 	UCHAR da = a.m[3];
 	if (da == 0 && a.clrref != 0) da = 255;
@@ -112,7 +112,7 @@ gwapi::Color gwapi::overlay(Color a, Color b) {
 	return c;
 };
 
-COLORREF gwapi::toWindowsColor(const Color& a) {
+COLORREF wgs::toWindowsColor(const color& a) {
 	return RGB(a.m[2],a.m[1],a.m[0]);
 }
 
@@ -120,7 +120,7 @@ COLORREF gwapi::toWindowsColor(const Color& a) {
 #include <stdlib.h>
 #include <windows.h>
 
-using namespace gwapi;
+using namespace wgs;
 
 void Line(HDC hdc, int x1, int y1, int x2, int y2) {
 	MoveToEx(hdc, x1, y1, NULL);
@@ -129,7 +129,7 @@ void Line(HDC hdc, int x1, int y1, int x2, int y2) {
 
 
 int main() {
-	Color a(0xFFFF2211), b(0x55330017), c(0x110066FD), d;
+	color a(0xFFFF2211), b(0x55330017), c(0x110066FD), d;
 	d = overlay(b, a);
 	printf("%x + %x = %x \n", b.clrref, a.clrref, d.clrref);
 

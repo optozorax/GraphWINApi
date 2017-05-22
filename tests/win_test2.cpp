@@ -3,65 +3,65 @@
 
 using namespace std;
 
-void mymouse(gwapi::Window *This, int x, int y, gwapi::WinEvents::MouseType click, int wheel) {
+void mymouse(wgs::window *This, int x, int y, wgs::WinEvents::MouseType click, int wheel) {
 	static int rnb = 0;
 
 	switch (click) {
-	case gwapi::WinEvents::L_DBL:
-		This->canvas.lineDraw(Point(x-5, y+5), Point(x+5, y-5));
+	case wgs::WinEvents::L_DBL:
+		This->canvas.draw_line(Point(x-5, y+5), Point(x+5, y-5));
 		This->redraw();
 		break;
-	case gwapi::WinEvents::R_DBL:
-		This->canvas.clear(gwapi::rainbow(rnb/20.0, true));
+	case wgs::WinEvents::R_DBL:
+		This->canvas.clear(wgs::rainbow(rnb/20.0, true));
 		This->redraw();
 		break;
-	case gwapi::WinEvents::L_DOWN:
-		This->canvas.circleDraw(Point(x, y), 10);
+	case wgs::WinEvents::L_DOWN:
+		This->canvas.draw_ellipse(Point(x, y), 10);
 		This->redraw();
 		break;
-	case gwapi::WinEvents::R_DOWN:
+	case wgs::WinEvents::R_DOWN:
 		This->canvas.textOut(Point(x, y), "L");
 		This->redraw();
 		break;
-	case gwapi::WinEvents::M_DOWN:
-		This->canvas.rectDraw(Point(x-10, y-10), Point(x+10, y+10));
+	case wgs::WinEvents::M_DOWN:
+		This->canvas.draw_rect(Point(x-10, y-10), Point(x+10, y+10));
 		This->redraw();
 		break;
-	case gwapi::WinEvents::M_UP:
-		This->taskbarColor(gwapi::Window::Green);
+	case wgs::WinEvents::M_UP:
+		This->taskbarColor(wgs::window::Green);
 		break;
-	case gwapi::WinEvents::X1_UP:
-		This->taskbarColor(gwapi::Window::Red);
+	case wgs::WinEvents::X1_UP:
+		This->taskbarColor(wgs::window::Red);
 		break;
-	case gwapi::WinEvents::X2_UP:
-		This->taskbarColor(gwapi::Window::Yellow);
+	case wgs::WinEvents::X2_UP:
+		This->taskbarColor(wgs::window::Yellow);
 		break;
-	case gwapi::WinEvents::Wheel:
+	case wgs::WinEvents::Wheel:
 		rnb += wheel/120;
-		This->canvas.brushSet(gwapi::rainbow(rnb/20.0, true));
+		This->canvas.brushSet(wgs::rainbow(rnb/20.0, true));
 		break;
-	case gwapi::WinEvents::Move:
+	case wgs::WinEvents::Move:
 		static Point b;
 		if (b != Point(0,0)) {
-			This->canvas.lineDraw(b, Point(x, y));
+			This->canvas.draw_line(b, Point(x, y));
 		}
 		b = Point(x, y);
 		break;
 	}
 }
 
-void myactive(gwapi::Window *This, bool actv, bool minz) {
+void myactive(wgs::window *This, bool actv, bool minz) {
 	if (actv) {
 		This->captionSet("ACTIVATE");
 	} else {
 		This->captionSet("DEACTIVATE");
 	}
 	if (minz) {
-		This->canvas.clear(gwapi::Black);
+		This->canvas.clear(wgs::Black);
 	}
 }
 
-void mykeyboard(gwapi::Window *This, int key, bool state) {
+void mykeyboard(wgs::window *This, int key, bool state) {
 	switch (key) {
 	case VK_NUMPAD1:
 		This->canvas.textOut(Point(0,0), "1 1 1");
@@ -97,28 +97,28 @@ void mykeyboard(gwapi::Window *This, int key, bool state) {
 	}
 }
 
-void mymoving(gwapi::Window *This, long &x, long &y, long &width, long &height) {
-	This->canvas.rectDraw(Point(0,0), Point(300, 25));
+void mymoving(wgs::window *This, long &x, long &y, long &width, long &height) {
+	This->canvas.draw_rect(Point(0,0), Point(300, 25));
 	This->canvas.textOut(Point(0,0), "MOVING " + to_string(x) + " " + to_string(y) + " " + to_string(width) + " " + to_string(height));
 	This->redraw();
 }
 
-void mysize(gwapi::Window *This, int x, int y) {
+void mysize(wgs::window *This, int x, int y) {
 	This->canvas.textOut(Point(0,0), "SIZE   " + to_string(x) + " " + to_string(y));
 	This->redraw();
 }
 
-void mysizing(gwapi::Window *This, long &x, long &y, long &width, long &height, gwapi::WinEvents::SizingType type) {
-	This->canvas.rectDraw(Point(0,0), Point(300, 25));
+void mysizing(wgs::window *This, long &x, long &y, long &width, long &height, wgs::WinEvents::SizingType type) {
+	This->canvas.draw_rect(Point(0,0), Point(300, 25));
 	This->canvas.textOut(Point(0,11), "SIZING " + to_string(x) + " " + to_string(y) + " " + to_string(width) + " " + to_string(height));
 }
 
 int main() {
-	gwapi::Window a;
+	wgs::window a;
 	a.taskbarProgress(1);
 
 	a.canvas.clear();
-	a.canvas.brushSet(gwapi::rainbow(0));
+	a.canvas.brushSet(wgs::rainbow(0));
 	a.taskbarProgress(1);
 	a.canvas.textStyle(12);
 	a.ev.mouse = mymouse;

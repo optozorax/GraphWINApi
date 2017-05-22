@@ -1,9 +1,9 @@
 #include "window.h"
 
-ITaskbarList3 *gwapi::Window::pTaskbarList;
-UINT gwapi::Window::wm_create_mess;
+ITaskbarList3 *wgs::window::sm_taskbar;
+UINT wgs::window::wm_create_mess;
 
-gwapi::WinEvents::WinEvents() : 
+wgs::WinEvents::WinEvents() : 
 	size(NULL),
 	sizing(NULL),
 	moving(NULL),
@@ -15,7 +15,7 @@ gwapi::WinEvents::WinEvents() :
 }
 
 
-gwapi::WindowType::WindowType() : 
+wgs::window_type::window_type() : 
 		position(Point(0,0)), 
 		size(Point(300,300)),
 		minSize(Point(0,0)), 
@@ -27,25 +27,25 @@ gwapi::WindowType::WindowType() :
 	flags = {};
 }
 
-void gwapi::Window::taskbarProgress(double x) {
-	pTaskbarList->SetProgressValue(hwnd_, (DWORD) 100*x, (DWORD) 100); 
+void wgs::window::taskbarProgress(double x) {
+	sm_taskbar->SetProgressValue(hwnd_, (DWORD) 100*x, (DWORD) 100); 
 }
 
-void gwapi::Window::taskbarColor(TaskbarColor clr) {
+void wgs::window::taskbarColor(TaskbarColor clr) {
 	switch (clr) {
-	case gwapi::Window::Loading:
-		pTaskbarList->SetProgressState(hwnd_, TBPF_INDETERMINATE); 
+	case wgs::window::Loading:
+		sm_taskbar->SetProgressState(hwnd_, TBPF_INDETERMINATE); 
 		break;
-	case gwapi::Window::Green:
-		pTaskbarList->SetProgressState(hwnd_, TBPF_NORMAL); 
+	case wgs::window::Green:
+		sm_taskbar->SetProgressState(hwnd_, TBPF_NORMAL); 
 		break;
-	case gwapi::Window::Yellow:
-		pTaskbarList->SetProgressState(hwnd_, TBPF_PAUSED); 
+	case wgs::window::Yellow:
+		sm_taskbar->SetProgressState(hwnd_, TBPF_PAUSED); 
 		break;
-	case gwapi::Window::Red:
-		pTaskbarList->SetProgressState(hwnd_, TBPF_ERROR); 
+	case wgs::window::Red:
+		sm_taskbar->SetProgressState(hwnd_, TBPF_ERROR); 
 		break;
-	case gwapi::Window::Blink:
+	case wgs::window::Blink:
 		FLASHWINFO pfwi;
 		ZeroMemory( &pfwi, sizeof( FLASHWINFO ) );
 		pfwi.cbSize = sizeof( FLASHWINFO );
@@ -58,18 +58,18 @@ void gwapi::Window::taskbarColor(TaskbarColor clr) {
 	}
 }
 
-void gwapi::Window::Init(WindowType *curWin, HWND hwnd) {
+void wgs::window::Init(window_type *curWin, HWND hwnd) {
 	hwnd_ = hwnd;
-	hdc_ = GetDC(hwnd);
+	m_hdc = GetDC(hwnd);
 
 	sizeSet(curWin->size);
-	current_.hdc_ = hdc_;
+	current_ = bufer(m_hdc, Point(10000, 10000));
 
-	menu.hmenu_ = CreateMenu();
+	main_menu.hmenu_ = CreateMenu();
 	sysMenu.hmenu_ = GetSystemMenu(hwnd_, false);
-	SetMenu(hwnd_, menu.hmenu_);
+	SetMenu(hwnd_, main_menu.hmenu_);
 
-	if (pTaskbarList == NULL) {
+	if (sm_taskbar == NULL) {
 		CoInitialize(NULL);
 		wm_create_mess = RegisterWindowMessage("TaskbarButtonCreated");
 	} 
@@ -77,29 +77,29 @@ void gwapi::Window::Init(WindowType *curWin, HWND hwnd) {
 	delete curWin;
 }
 
-gwapi::Window::Window(WindowType type) :
+wgs::window::window(window_type type) :
 	canvas(type.size.x+50, type.size.y+50), 
 	MinSize(type.minSize), 
 	MaxSize(type.maxSize)
 {
 	type.This = this;
-	WindowType *type1 = new WindowType; 
+	window_type *type1 = new window_type; 
 	*type1 = type;
 
 	/* Создание потока, который создает окно и обрабатывает его сообщения. */
 	CreateThread( NULL, 0, &WindowLife::windowMainThread, type1, 0, NULL);
 
 	// Костыль, чтобы программа выходила из инициализации, только когда получит таскбар
-	if (type.style == WindowType::Standart)
-		while (pTaskbarList == 0) Sleep(1);
+	if (type.style == window_type::Standart)
+		while (sm_taskbar == 0) Sleep(1);
 }
 
-gwapi::Window::~Window() {
+wgs::window::~window() {
 	SendMessage(hwnd_, WM_CLOSE, NULL, NULL);
-	DeleteDC(hdc_);
+	DeleteDC(m_hdc);
 }
 
-void gwapi::Window::drawMenu(Point x, Menu mn) {
+void wgs::window::drawMenu(Point x, menu mn) {
 	RECT rcClient, rcWindow;
 	GetWindowRect(hwnd_, &rcWindow);
 	GetClientRect(hwnd_, &rcClient);
@@ -109,15 +109,15 @@ void gwapi::Window::drawMenu(Point x, Menu mn) {
 		x.x + rcWindow.left + xx, x.y + rcWindow.top + yy, hwnd_, NULL);
 }
 
-void gwapi::Window::redraw(void) {
+void wgs::window::redraw(void) {
 	canvas.drawTo(current_);
 }
 
-void gwapi::Window::redrawMenu(void) {
+void wgs::window::redrawMenu(void) {
 	DrawMenuBar(hwnd_);
 }
 
-void gwapi::Window::sizeSet(Point sz) {
+void wgs::window::sizeSet(Point sz) {
 	RECT rcClient, rcWindow;
 	POINT ptDiff;
 	GetClientRect( hwnd_, &rcClient );
@@ -127,31 +127,31 @@ void gwapi::Window::sizeSet(Point sz) {
 	MoveWindow( hwnd_, rcWindow.left, rcWindow.top, sz.x + ptDiff.x, sz.y + ptDiff.y, false);
 }
 
-Point gwapi::Window::sizeGet(void) {
+Point wgs::window::sizeGet(void) {
 	RECT rcClient;
 	GetClientRect( hwnd_, &rcClient );
 	return Point(rcClient.right, rcClient.bottom);
 }
 
-void gwapi::Window::captionSet(std::string cap) {
+void wgs::window::captionSet(std::string cap) {
 	SetWindowText(hwnd_, cap.c_str());
 }
 
-void gwapi::Window::positionSet(Point ps) {
+void wgs::window::positionSet(Point ps) {
 	RECT rcClient;
 	GetClientRect( hwnd_, &rcClient );
 	MoveWindow( hwnd_, ps.x, ps.y, rcClient.right, rcClient.bottom, false);
 }
 
-void gwapi::Window::fullscreen(bool state) {
+void wgs::window::fullscreen(bool state) {
 	static WINDOWPLACEMENT wnplc;
 	wnplc.length = sizeof(WINDOWPLACEMENT);
 	static bool nowState = false;
 
-	if (pTaskbarList != NULL) {
+	if (sm_taskbar != NULL) {
 		if (state) {
 			if (!nowState) {
-				pTaskbarList->MarkFullscreenWindow(hwnd_, TRUE);
+				sm_taskbar->MarkFullscreenWindow(hwnd_, TRUE);
 				GetWindowPlacement(hwnd_, &wnplc);
 				SetWindowLongPtr(hwnd_, GWL_STYLE, WS_POPUP | (WS_Style & (WS_VSCROLL | WS_HSCROLL)));
 				UpdateWindow(hwnd_);
@@ -161,7 +161,7 @@ void gwapi::Window::fullscreen(bool state) {
 			};
 		} else {
 			if (nowState) {
-				pTaskbarList->MarkFullscreenWindow(hwnd_, FALSE);
+				sm_taskbar->MarkFullscreenWindow(hwnd_, FALSE);
 				SetWindowLongPtr(hwnd_, GWL_STYLE, WS_Style);
 				UpdateWindow(hwnd_);
 				SetWindowPlacement(hwnd_, &wnplc);
@@ -172,7 +172,7 @@ void gwapi::Window::fullscreen(bool state) {
 	}
 }
 
-bool gwapi::Window::isKeyDown(int key) {
+bool wgs::window::isKeyDown(int key) {
 	/* Если ввести символы A..Z, a..z, и другие, которые 
 	явно отображаются на клавиатуре, то функция проверит
 	их на нажатия. Иначе надо указывать коды виртуальных 
@@ -180,7 +180,7 @@ bool gwapi::Window::isKeyDown(int key) {
 	return (-(GetKeyState(key) >> 8));
 }
 
-unsigned long gwapi::Window::timeGet(void) {
+unsigned long wgs::window::timeGet(void) {
 	/* Возвращает количество миллисекунд с того момента, 
 	как система была запущена. Измеряет время в миллисек.
 	Для того, чтобы узнать сколько времени прошло между 
@@ -189,8 +189,6 @@ unsigned long gwapi::Window::timeGet(void) {
 	return GetTickCount();
 }
 
-void gwapi::Window::sleep(unsigned long t) {
+void wgs::window::sleep(unsigned long t) {
 	Sleep(t);
 }
-
-/* ~wapithread - создание потока. */

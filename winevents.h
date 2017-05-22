@@ -25,9 +25,9 @@ VK_OEM_7	VK_OEM_8	VK_OEM_102	VK_PROCESSKEY			VK_PACKET	VK_ATTN
 VK_CRSEL	VK_EXSEL	VK_EREOF	VK_PLAY		VK_ZOOM		VK_NONAME	VK_PA1
 VK_OEM_CLEAR */
 
-namespace gwapi {
+namespace wgs {
 
-class Window;
+class window;
 
 class WinEvents {
 public:
@@ -40,14 +40,14 @@ public:
 		L_UP, R_UP, M_UP, X1_UP, X2_UP,
 		Wheel, Move
 	};
-	void (*size)(Window*, int, int);
-	void (*sizing)(Window*, long&, long&, long&, long&, SizingType);
-	void (*moving)(Window*, long&, long&, long&, long&);
-	void (*keyboard)(Window*, int, bool);
-	void (*mouse)(Window*, int, int,  MouseType, int);
-	void (*activate)(Window*, bool, bool);
-	void (*comand)(Window*, int);
-	void (*close)(Window*);
+	void (*size)(window*, int, int);
+	void (*sizing)(window*, long&, long&, long&, long&, SizingType);
+	void (*moving)(window*, long&, long&, long&, long&);
+	void (*keyboard)(window*, int, bool);
+	void (*mouse)(window*, int, int,  MouseType, int);
+	void (*activate)(window*, bool, bool);
+	void (*comand)(window*, int);
+	void (*close)(window*);
 
 	WinEvents();
 };

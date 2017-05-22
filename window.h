@@ -13,11 +13,11 @@
 #include "winevents.h"
 #include "menu.h"
 
-namespace gwapi{
+namespace wgs{
 
-class WindowType {
+class window_type {
 public:
-	Window *This;
+	window *This;
 	Point position, size;
 	Point minSize, maxSize;
 	std::string caption;
@@ -36,31 +36,33 @@ public:
 	enum WindowStyle{Standart, Tool, Caption, Popup, NoBorder} 
 		style;
 
-	WindowType();
+	window_type();
 };
 
-class Window {
-	HDC hdc_;
-	Bufer current_;
+class window {
+	HDC m_hdc;
+	bufer current_;
 
 	LONG_PTR WS_Style;
 	static UINT wm_create_mess;
-	static ITaskbarList3 *pTaskbarList;
+	static ITaskbarList3 *sm_taskbar;
 
-	void Init(WindowType*, HWND);
+	HWND	hwnd_;
+
+	void Init(window_type*, HWND);
 public:
-	HWND hwnd_;
 	WinEvents ev;
-	Bufer canvas;
-	Menu menu, sysMenu;
+	bufer	canvas;
+	menu	main_menu;
+	menu	sysMenu;
 
-	Point MinSize;
-	Point MaxSize;
+	Point	MinSize;
+	Point	MaxSize;
 	
-	Window(WindowType = WindowType());
-	~Window();
+	window(window_type = window_type());
+	~window();
 
-	void drawMenu(Point, Menu);
+	void drawMenu(Point, menu);
 	void redraw(void);
 	void redrawMenu(void);
 	
@@ -78,10 +80,10 @@ public:
 	static bool isKeyDown(int);
 	static void sleep(unsigned long);
 
-	friend LRESULT WindowLife::create(Window*, HWND&, WPARAM&, LPARAM&);
+	friend LRESULT WindowLife::create(window*, HWND&, WPARAM&, LPARAM&);
 	friend DWORD WINAPI WindowLife::windowMainThread(LPVOID);
-	friend void WindowLife::createStyle(WindowType&, DWORD&, DWORD&);
-	friend void WindowLife::taskbarRegister(Window*, UINT, HWND);
+	friend void WindowLife::createStyle(window_type&, DWORD&, DWORD&);
+	friend void WindowLife::taskbarRegister(window*, UINT, HWND);
 };
 
 }

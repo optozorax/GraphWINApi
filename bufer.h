@@ -1,4 +1,4 @@
-#ifndef __BUFERDEFINE
+п»ї#ifndef __BUFERDEFINE
 #define __BUFERDEFINE
 
 #include <string>
@@ -7,27 +7,18 @@
 #include "color.h"
 #include "point.h"
 
-namespace gwapi{
+namespace wgs{
 
-/* Классы исключений: */
-class Bad_Coordinate{};
+/* РљР»Р°СЃСЃС‹ С‚РёРїРѕРІ СЂРёСЃРѕРІР°РЅРёСЏ. */
+enum text_write_style { LeftUp, Center };
 
-/* Классы типов рисования. */
-enum TextWriteStyle{LeftUp, Center};
-enum BezierStyle{Default, Pieces};
-
-/* Структуры данных для внутреннего представления. */
-struct Pen {
-	Color color;
+/* РЎС‚СЂСѓРєС‚СѓСЂС‹ РґР°РЅРЅС‹С… РґР»СЏ РІРЅСѓС‚СЂРµРЅРЅРµРіРѕ РїСЂРµРґСЃС‚Р°РІР»РµРЅРёСЏ. */
+struct pen {
+	color color;
 	double thickness;
 };
-typedef Color Brush;
 
-class Window;
-
-namespace WindowLife {
-	LRESULT create(Window*, HWND&, WPARAM&, LPARAM&);
-}
+typedef color brush;
 
 class StyleText {
 public:
@@ -44,74 +35,66 @@ public:
 	StyleText(int = 14, std::string = "Consolas", int = 0, bool = false, bool = false, bool = false, int = 0, int = 0);
 };
 
-class Bufer {
-	HDC hdc_;
-	HBITMAP hbmp_;
-	Pen pen_;
-	Brush brush_;
-	UINT32 *mas_;
-	int sizex, sizey;
+class bufer {
 public:
-	Bufer(int = 1000, int = 1000);
-	Bufer(HDC);
-	~Bufer();
+	bufer(int = 1000, int = 1000);
+	bufer(HDC hdc, Point size);
+	~bufer();
 
-	void resize(int = 1000, int = 1000);
+	void resize(Point nsize);
 
-	// TODO подумать насчет копирования буфера
-	//Bufer(const Bufer&);
+	/* Р Р°Р±РѕС‚Р° РЅРёР·РєРѕСѓСЂРѕРІРЅРµРІРѕР№ С‡Р°СЃС‚СЊСЋ. */
+	unsigned width(void) const;
+	unsigned height(void) const;
+	color* buf(void);
 
-	/* Работа низкоуровневой частью. */
-	unsigned width(void);
-	unsigned height(void);
-	Color* buf(void);
+	/* Р Р°Р±РѕС‚Р° СЃ РёР·РѕР±СЂР°Р¶РµРЅРёСЏРјРё. */
+	void read_from_bmp(std::string name);
+	void write_in_bmp(std::string name, bool is32bit);
 
-	/* Работа с BMP. */
-	void readFromBMP(std::string);
-	void writeToBMP(std::string, bool);
+	/* Р Р°Р±РѕС‚Р° СЃ РґСЂСѓРіРёРјРё Р±СѓС„РµСЂР°РјРё. */
+	void drawTo(bufer&, int x = 0, int y = 0, int width = 0, int height = 0);
+	void drawAlphaTo(bufer&, int x = 0, int y = 0, int width = 0, int height = 0);
+	// Р•СЃР»Рё РІРµР»РёС‡РёРЅС‹ width, height СЂР°РІРЅС‹ РЅСѓР»СЋ, С‚Рѕ СЌС‚Рѕ Р·РЅР°С‡РёС‚, С‡С‚Рѕ РЅР°РґРѕ РЅР°СЂРёСЃРѕРІР°С‚СЊ РІРµСЃСЊ Р±СѓС„РµСЂ
 	
-	/* Работа с другими буферами. */
-	void drawTo(Bufer&, int x = 0, int y = 0, int width = 0, int height = 0);
-	void drawAlphaTo(Bufer&, int x = 0, int y = 0, int width = 0, int height = 0);
-	// Если величины width, height равны нулю, то это значит, что надо нарисовать весь буфер
+	/* РћС‡РёСЃС‚РєР° Р±СѓС„РµСЂР° Р·Р°РґР°РЅРЅС‹Рј С†РІРµС‚РѕРј. */
+	void clear(color = White);
 	
-	/* Очистка буфера заданным цветом. */
-	void clear(Color = White);
+	/* Р Р°Р±РѕС‚Р° СЃ СЂРёСЃСѓСЋС‰РёРјРё СѓСЃС‚СЂРѕР№СЃС‚РІР°РјРё. */
+	pen penSet(color = Black, double = 1);
+	brush brushSet(color = White);
 	
-	/* Работа с рисующими устройствами. */
-	Pen penSet(Color = Black, double = 1);
-	Brush brushSet(Color = White);
-	
-	/* Работа с текстом. */
-	void textOut(Point, std::string, TextWriteStyle = LeftUp);
+	/* Р Р°Р±РѕС‚Р° СЃ С‚РµРєСЃС‚РѕРј. */
+	void textOut(Point, std::string, text_write_style = LeftUp);
 	Point textSize(std::string);
 	void textStyle(StyleText);
 
-	/* Примитивы на основе функций Windows. Без сглаживания и прозрачных цветов. */
-	/* Максимальная скорость рисования. */
-	void pixelDraw(Point, Color = Black);
-	void rectDraw(Point, Point);
-	void circleDraw(Point, int);
-	void lineDraw(Point, Point);
-	void polyDraw(std::vector<Point>);
-	void bezierDraw(std::vector<Point>, BezierStyle = Default);
+	/* РџСЂРёРјРёС‚РёРІС‹ РЅР° РѕСЃРЅРѕРІРµ С„СѓРЅРєС†РёР№ Windows. Р‘РµР· СЃРіР»Р°Р¶РёРІР°РЅРёСЏ Рё РїСЂРѕР·СЂР°С‡РЅС‹С… С†РІРµС‚РѕРІ. */
+	/* РњР°РєСЃРёРјР°Р»СЊРЅР°СЏ СЃРєРѕСЂРѕСЃС‚СЊ СЂРёСЃРѕРІР°РЅРёСЏ. */
+	void draw_pixel(Point, color = Black);
+	void draw_rect(Point, Point);
+	void draw_ellipse(Point, Point);
+	void draw_line(Point, Point);
+	void draw_poly(std::vector<Point>);
 	
-	/* Примитивы на основе моей собственная реализация со сглаживанием и прозрачными цветами. */
-	/* Скорее всего очень медленно. */
-	void pixelDraw(point2, Color = Black);
-	void rectDraw(point2, point2);
-	void circleDraw(point2, double);
-	void lineDraw(point2, point2);
-	void polyDraw(std::vector<point2>);
-	void bezierDraw(std::vector<point2>, BezierStyle = Default);
+	/* РџСЂРёРјРёС‚РёРІС‹ РЅР° РѕСЃРЅРѕРІРµ РјРѕРµР№ СЃРѕР±СЃС‚РІРµРЅРЅР°СЏ СЂРµР°Р»РёР·Р°С†РёСЏ СЃРѕ СЃРіР»Р°Р¶РёРІР°РЅРёРµРј Рё РїСЂРѕР·СЂР°С‡РЅС‹РјРё С†РІРµС‚Р°РјРё. */
+	/* РЎРєРѕСЂРµРµ РІСЃРµРіРѕ РѕС‡РµРЅСЊ РјРµРґР»РµРЅРЅРѕ. */
+	void draw_rect(point2, point2);
+	void draw_ellipse(point2, point2);
+	void draw_line(point2, point2);
+	void draw_poly(std::vector<point2>);
 
-	/* Обращение к соответствующему пикселю для изменения или чтения. */
-	Color& pixelGet(Point); // С проверкой выхода за границы
-	Color& operator[](Point); // Без проверки выхода за границы
-
-	//# Когда-нибудь написать интерфейс для работы с рисунками. #//
-
-	friend class Window;
+	/* РћР±СЂР°С‰РµРЅРёРµ Рє СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРјСѓ РїРёРєСЃРµР»СЋ РґР»СЏ РёР·РјРµРЅРµРЅРёСЏ РёР»Рё С‡С‚РµРЅРёСЏ. */
+	color& get_pixel(Point); // РЎ РїСЂРѕРІРµСЂРєРѕР№ РІС‹С…РѕРґР° Р·Р° РіСЂР°РЅРёС†С‹
+	color& operator[](Point); // Р‘РµР· РїСЂРѕРІРµСЂРєРё РІС‹С…РѕРґР° Р·Р° РіСЂР°РЅРёС†С‹
+private:
+	HDC		m_hdc;
+	HBITMAP	m_hbmp;
+	UINT32	*m_mas;
+	pen		m_pen;
+	brush	m_brush;
+	int		m_width;
+	int		m_height;
 };
 
 }

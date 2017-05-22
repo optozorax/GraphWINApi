@@ -20,7 +20,7 @@ public:
 	void movePoint(int, Point);
 	void move(Point);
 
-	void draw(gwapi::Bufer&, bool = true);
+	void draw(wgs::bufer&, bool = true);
 };
 
 Bezier::Bezier() : a_(1) {
@@ -62,33 +62,33 @@ void Bezier::move(Point dp) {
 	}
 }
 
-void Bezier::draw(gwapi::Bufer &buf, bool color) {
-	gwapi::Color crclClr = gwapi::rgb(255, 0, 0);
-	gwapi::Color lineClr = gwapi::rgb(0, 0, 255);
-	gwapi::Color bezrClr = gwapi::rgb(0, 0, 0);
+void Bezier::draw(wgs::bufer &buf, bool color) {
+	wgs::color crclClr = wgs::rgb(255, 0, 0);
+	wgs::color lineClr = wgs::rgb(0, 0, 255);
+	wgs::color bezrClr = wgs::rgb(0, 0, 0);
 	if (!color) {
 		crclClr.m[3] = 128;
 		lineClr.m[3] = 128;
 		bezrClr.m[3] = 128;
-		crclClr = gwapi::overlay(crclClr, gwapi::White);
-		lineClr = gwapi::overlay(lineClr, gwapi::White);
-		bezrClr = gwapi::overlay(bezrClr, gwapi::White);
+		crclClr = wgs::overlay(crclClr, wgs::White);
+		lineClr = wgs::overlay(lineClr, wgs::White);
+		bezrClr = wgs::overlay(bezrClr, wgs::White);
 	}
 
 	/* Рисуем кривую Безье. */
 	buf.penSet(bezrClr, color + 1);
-	buf.bezierDraw(a_);
+	buf.draw_bezier(a_);
 
 	/* Рисуем линии. */
 	buf.penSet(lineClr, color + 1);
 	for (int i = 0; i < a_.size()-1; i++) {
-		buf.lineDraw(a_[i], a_[i+1]);
+		buf.draw_line(a_[i], a_[i+1]);
 	}
 
 	/* Рисуем окружности. */
 	buf.penSet(crclClr, color + 1);
 	for (int i = 0; i < a_.size(); i++) {
-		buf.circleDraw(a_[i], int(poRadius));
+		buf.draw_ellipse(a_[i], Point(poRadius,poRadius));
 	}
 }
 
@@ -108,7 +108,7 @@ public:
 	void mouseMove(Point);
 	void mouseWheel(Point, int);
 	
-	void draw(gwapi::Bufer&, Point, bool = true);
+	void draw(wgs::bufer&, Point, bool = true);
 };
 
 BezierInterface::BezierInterface() : 
@@ -159,13 +159,13 @@ void BezierInterface::mouseMove(Point x) {
 	}
 }
 
-void BezierInterface::draw(gwapi::Bufer &buf, Point mousePos, bool color) {
+void BezierInterface::draw(wgs::bufer &buf, Point mousePos, bool color) {
 	bz.draw(buf, color);
 	if (color) {
 		int num = bz.numPoint(mousePos);
 		if (num != -1) {
-			buf.penSet(gwapi::Bitcoin, 2);
-			buf.circleDraw(bz.getCenter(num), int(poRadius));
+			buf.penSet(wgs::Bitcoin, 2);
+			buf.draw_ellipse(bz.getCenter(num), Point(poRadius,poRadius));
 		}
 	}
 }
@@ -185,31 +185,31 @@ Point mousePos;
 int currentBez = 0;
 bool drawFlag = true;
 
-void bezmouse(gwapi::Window *This, int x, int y, gwapi::WinEvents::MouseType type, int wheel) {
+void bezmouse(wgs::window *This, int x, int y, wgs::WinEvents::MouseType type, int wheel) {
 	switch (type)
 	{
-	case gwapi::WinEvents::L_DOWN:
+	case wgs::WinEvents::L_DOWN:
 		bzs[currentBez].mouseLeft(Point(x,y), false);
 		drawFlag = true;
 		break;
-	case gwapi::WinEvents::R_DOWN:
+	case wgs::WinEvents::R_DOWN:
 		bzs[currentBez].mouseRight(Point(x,y), false);
 		drawFlag = true;
 		break;
-	case gwapi::WinEvents::L_UP:
+	case wgs::WinEvents::L_UP:
 		bzs[currentBez].mouseLeft(Point(x,y), true);
 		drawFlag = true;
 		break;
-	case gwapi::WinEvents::R_UP:
+	case wgs::WinEvents::R_UP:
 		bzs[currentBez].mouseRight(Point(x,y), true);
 		drawFlag = true;
 		break;
-	case gwapi::WinEvents::Move:
+	case wgs::WinEvents::Move:
 		bzs[currentBez].mouseMove(Point(x,y));
 		mousePos = Point(x, y);
 		drawFlag = true;
 		break;
-	case gwapi::WinEvents::Wheel:
+	case wgs::WinEvents::Wheel:
 		//bzs[currentBez].mouseWheel(mousePos, wheel);
 		//drawFlag = true;
 		break;
@@ -218,7 +218,7 @@ void bezmouse(gwapi::Window *This, int x, int y, gwapi::WinEvents::MouseType typ
 	}
 }
 
-void bezkey(gwapi::Window *This, int key, bool state) {
+void bezkey(wgs::window *This, int key, bool state) {
 	if (!state) {
 		if (key >= '0' && key <='9')
 			currentBez = key-'0';
@@ -229,10 +229,10 @@ void bezkey(gwapi::Window *This, int key, bool state) {
 }
 
 int main() {
-	gwapi::WindowType currType;
+	wgs::window_type currType;
 	currType.caption = "Bezier Creater v0.1";
 	currType.size = Point(800, 800);
-	gwapi::Window current(currType);
+	wgs::window current(currType);
 
 	current.ev.mouse = bezmouse;
 	current.ev.keyboard = bezkey;

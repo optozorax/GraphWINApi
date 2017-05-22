@@ -1,31 +1,31 @@
 #include "../window.h"
 
 int main() {
-	gwapi::WindowType wndtype;
+	wgs::window_type wndtype;
 	wndtype.size = Point(490, 490);
 	wndtype.maxSize = wndtype.size;
 	wndtype.minSize = wndtype.size;
 	wndtype.caption = "Keys Test";
-	wndtype.style = gwapi::WindowType::Tool;
-	gwapi::Window wnd(wndtype);
+	wndtype.style = wgs::window_type::Tool;
+	wgs::window wnd(wndtype);
 
-	wnd.canvas.penSet(gwapi::White);
-	wnd.canvas.textStyle(gwapi::StyleText(12));
+	wnd.canvas.penSet(wgs::White);
+	wnd.canvas.textStyle(wgs::StyleText(12));
 
 	wnd.fullscreen(true);
 
 	while (true) {
-		wnd.canvas.clear(gwapi::Bitcoin);
-		wnd.canvas.penSet(gwapi::White);
+		wnd.canvas.clear(wgs::Bitcoin);
+		wnd.canvas.penSet(wgs::White);
 		for (int i = 0; i < 256; i++) {
 			if (wnd.isKeyDown(i))
-				wnd.canvas.brushSet(gwapi::Ubuntu);
+				wnd.canvas.brushSet(wgs::Ubuntu);
 			else
-				wnd.canvas.brushSet(gwapi::Bitcoin);
-			wnd.canvas.rectDraw(Point(i%16, i/16)*30 + Point(2,2) + Point(5,5), 
+				wnd.canvas.brushSet(wgs::Bitcoin);
+			wnd.canvas.draw_rect(Point(i%16, i/16)*30 + Point(2,2) + Point(5,5), 
 				Point(i%16+1, i/16+1)*30 - Point(2,2) + Point(5,5));
 			wnd.canvas.textOut(Point(i%16, i/16)*30 + Point(15, 15) + Point(5,5), 
-				std::to_string(i), gwapi::TextWriteStyle::Center);
+				std::to_string(i), wgs::text_write_style::Center);
 		}
 		wnd.redraw();
 		wnd.sleep(100);

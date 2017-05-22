@@ -10,10 +10,10 @@ DWORD CurrentProcessTick(void) {
 	return a4.dwLowDateTime;
 }
 
-inline void floatR(gwapi::Window &wnd, double a, double b, double c) {
+inline void floatR(wgs::window &wnd, double a, double b, double c) {
 	double alpha, sum, r;
 	int x,y,i,j;
-	gwapi::Color newc;
+	wgs::color newc;
 	point2 y1;
 	for (int k = 0; k < 30; k++){
 		for (x = 0; x < 300; x++) {
@@ -28,18 +28,18 @@ inline void floatR(gwapi::Window &wnd, double a, double b, double c) {
 				}
 				alpha = sum/256;
 
-				newc = gwapi::Black;
+				newc = wgs::Black;
 				newc.m[3] = newc.m[3]*alpha;
 				if (newc.m[3] == 0) newc.m[3] = 1;
-				wnd.canvas[Point(x, y)] = gwapi::overlay(newc, wnd.canvas[Point(x, y)]).clrref;
+				wnd.canvas[Point(x, y)] = wgs::overlay(newc, wnd.canvas[Point(x, y)]).clrref;
 			}
 		}
 	}
 }
 
-inline void intR(gwapi::Window &wnd, double a, double b, double c) {
+inline void intR(wgs::window &wnd, double a, double b, double c) {
 	int x,y,i,j, sum;
-	gwapi::Color newc;
+	wgs::color newc;
 	int a1 = a*255, b1 = b*255, c1 = c*255, sab = sqrt(a1*a1 + b1*b1)*15, rr;
 
 	for (int k = 0; k < 30; k++){
@@ -53,17 +53,17 @@ inline void intR(gwapi::Window &wnd, double a, double b, double c) {
 					}
 				}
 
-				newc = gwapi::Black;
+				newc = wgs::Black;
 				newc.m[3] = newc.m[3]*sum/256;
 				if (newc.m[3] == 0) newc.m[3] = 1;
-				wnd.canvas[Point(x, y)] = gwapi::overlay(newc, wnd.canvas[Point(x, y)]).clrref;
+				wnd.canvas[Point(x, y)] = wgs::overlay(newc, wnd.canvas[Point(x, y)]).clrref;
 			}
 		}
 	}
 }
 
 int main() {
-	gwapi::Window wnd;
+	wgs::window wnd;
 	DWORD current = 0, time = 0;
 
 	double a = 1, b = -1, c = 0;

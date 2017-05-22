@@ -1,19 +1,19 @@
 #include "menu.h"
 
-void gwapi::Menu::destroy(void) {
+void wgs::menu::destroy(void) {
 	DestroyMenu(hmenu_);
 }
 
-gwapi::Menu& gwapi::Menu::deleteLine(int i) {
+wgs::menu& wgs::menu::deleteLine(int i) {
 	RemoveMenu(hmenu_, i, MF_BYPOSITION);
 	return *this;
 }
 
-int gwapi::Menu::size(void) {
+int wgs::menu::size(void) {
 	return GetMenuItemCount(hmenu_);
 }
 
-gwapi::MenuLine::MenuLine(MenuType tp, std::string nm, unsigned int ID, bool chck, bool grd, bool ral) : 
+wgs::menu_line::menu_line(menu_type tp, std::string nm, unsigned int ID, bool chck, bool grd, bool ral) : 
 	bmp1_(NULL), 
 	bmp2_(NULL),
 	bmp3_(NULL)
@@ -22,7 +22,7 @@ gwapi::MenuLine::MenuLine(MenuType tp, std::string nm, unsigned int ID, bool chc
 	if (type != Separator) {
 		name = nm;
 		if (type != PopupMenu) {
-			menu = NULL;
+			popup_menu = NULL;
 			id = ID;
 			flags.checked = chck;
 			flags.grayed = grd;
@@ -31,21 +31,21 @@ gwapi::MenuLine::MenuLine(MenuType tp, std::string nm, unsigned int ID, bool chc
 	}
 }
 
-gwapi::MenuLine::MenuLine(Menu mn, std::string nm, bool chck, bool grd, bool ral) :
+wgs::menu_line::menu_line(menu mn, std::string nm, bool chck, bool grd, bool ral) :
 	bmp1_(NULL), 
 	bmp2_(NULL),
 	bmp3_(NULL)
 {
 	type = PopupMenu;
-	menu = new Menu;
-	menu->hmenu_ = mn.hmenu_;
+	popup_menu = new menu;
+	popup_menu->hmenu_ = mn.hmenu_;
 	name = nm;
 	flags.checked = chck;
 	flags.grayed = grd;
 	flags.rightAlign = ral;
 }
 
-gwapi::Menu::Menu() {
+wgs::menu::menu() {
 	hmenu_ = CreateMenu();
 }
 
@@ -81,23 +81,23 @@ HBITMAP Icon2Bmp(HICON hicon) {
 	return hbmp;
 }
 
-gwapi::MenuLine& gwapi::MenuLine::SetIcon(int x) {
+wgs::menu_line& wgs::menu_line::SetIcon(int x) {
 	bmp1_ = Icon2Bmp(LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(x)));
 	return *this;
 }
 
-gwapi::MenuLine& gwapi::MenuLine::SetTwoIcons(int x, int y) {
+wgs::menu_line& wgs::menu_line::SetTwoIcons(int x, int y) {
 	bmp2_ = Icon2Bmp(LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(x)));
 	bmp3_ = Icon2Bmp(LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(y)));
 	return *this;
 }
 
-gwapi::Menu& gwapi::Menu::pushLine(MenuLine ln) {
+wgs::menu& wgs::menu::pushLine(menu_line ln) {
 	if (ln.type == Separator)
 		AppendMenu(hmenu_, MF_SEPARATOR, 0, "");
 	else {
 		if (ln.type == PopupMenu)
-			AppendMenu(hmenu_, MF_STRING | MF_POPUP, (UINT)(ln.menu->hmenu_), ln.name.c_str());
+			AppendMenu(hmenu_, MF_STRING | MF_POPUP, (UINT)(ln.popup_menu->hmenu_), ln.name.c_str());
 		if ((ln.type == Line) || (ln.type == Line2BMP))
 			AppendMenu(hmenu_, MF_STRING, ln.id, ln.name.c_str());
 		set(size(), ln);
@@ -105,12 +105,12 @@ gwapi::Menu& gwapi::Menu::pushLine(MenuLine ln) {
 	return *this;
 }
 
-gwapi::Menu& gwapi::Menu::insertLine(int x, MenuLine ln) {
+wgs::menu& wgs::menu::insertLine(int x, menu_line ln) {
 	if (ln.type == Separator)
 		InsertMenu(hmenu_, x, MF_BYPOSITION | MF_SEPARATOR, 0, "");
 	else {
 		if (ln.type == PopupMenu)
-			InsertMenu(hmenu_, x, MF_BYPOSITION | MF_STRING | MF_POPUP, (UINT)(ln.menu->hmenu_), ln.name.c_str());
+			InsertMenu(hmenu_, x, MF_BYPOSITION | MF_STRING | MF_POPUP, (UINT)(ln.popup_menu->hmenu_), ln.name.c_str());
 		if (ln.type == Line || ln.type == Line2BMP)
 			InsertMenu(hmenu_, x, MF_BYPOSITION | MF_STRING, ln.id, ln.name.c_str());
 		set(size(), ln);
@@ -118,7 +118,7 @@ gwapi::Menu& gwapi::Menu::insertLine(int x, MenuLine ln) {
 	return *this;
 }
 
-gwapi::Menu& gwapi::Menu::set(int x, MenuLine ln) {
+wgs::menu& wgs::menu::set(int x, menu_line ln) {
 	MENUITEMINFO lpmii;
 	ZeroMemory(&lpmii, sizeof(MENUITEMINFO));
 	lpmii.cbSize = sizeof(MENUITEMINFO);
@@ -126,7 +126,7 @@ gwapi::Menu& gwapi::Menu::set(int x, MenuLine ln) {
 		lpmii.fMask |= MIIM_BITMAP;
 	if (ln.bmp2_ != NULL)
 		lpmii.fMask |= MIIM_CHECKMARKS;
-	if (ln.menu != NULL)
+	if (ln.popup_menu != NULL)
 		lpmii.fMask |= MIIM_SUBMENU;
 	lpmii.fMask |= MIIM_FTYPE | MIIM_ID | MIIM_STATE | MIIM_STRING;
 	if (ln.type == Separator)
@@ -142,7 +142,7 @@ gwapi::Menu& gwapi::Menu::set(int x, MenuLine ln) {
 		lpmii.fState |= MFS_GRAYED | MFS_DISABLED;
 	lpmii.wID = ln.id;
 	if (ln.type == PopupMenu)
-		lpmii.hSubMenu = ln.menu->hmenu_;
+		lpmii.hSubMenu = ln.popup_menu->hmenu_;
 	if (ln.bmp2_ != NULL) {
 		lpmii.hbmpChecked = ln.bmp2_;
 		lpmii.hbmpUnchecked = ln.bmp3_;
@@ -155,14 +155,14 @@ gwapi::Menu& gwapi::Menu::set(int x, MenuLine ln) {
 	return *this;
 }
 
-gwapi::MenuLine gwapi::Menu::get(int x) {
+wgs::menu_line wgs::menu::get(int x) {
 	MENUITEMINFO lpmii;
 	ZeroMemory(&lpmii,  sizeof(MENUITEMINFO));
 	lpmii.cbSize = sizeof(MENUITEMINFO);
 	lpmii.fMask = MIIM_BITMAP | MIIM_CHECKMARKS | MIIM_FTYPE | MIIM_ID | MIIM_STATE | MIIM_STRING | MIIM_SUBMENU;
 	GetMenuItemInfo(hmenu_, x-1, TRUE, &lpmii);
 
-	MenuLine ln(Line);
+	menu_line ln(Line);
 	if (lpmii.fType & MFT_SEPARATOR)
 		ln.type = Separator;
 	if (lpmii.fType & MFT_RIGHTJUSTIFY)
@@ -173,8 +173,8 @@ gwapi::MenuLine gwapi::Menu::get(int x) {
 		ln.flags.grayed = true;
 	ln.id = lpmii.wID;
 	if (lpmii.hSubMenu != NULL) {
-		ln.menu = new Menu;
-		ln.menu->hmenu_ = lpmii.hSubMenu;
+		ln.popup_menu = new menu;
+		ln.popup_menu->hmenu_ = lpmii.hSubMenu;
 		ln.type = PopupMenu;
 	}
 	if (lpmii.hbmpChecked != NULL) {

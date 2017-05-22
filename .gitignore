@@ -4,3 +4,5 @@ CMakeLists.txt
 ConEmu.lnk
 .vs/
 ffmpeg/
+EasyBMP/
+wgs_doc_html/

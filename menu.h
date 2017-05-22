@@ -1,21 +1,21 @@
 #include <string>
 #include <windows.h>
 
-namespace gwapi {
+namespace wgs {
 
-class Menu;
+class menu;
 
-enum MenuType {
+enum menu_type {
 	PopupMenu, Separator, 
 	Line, Line2BMP
 };
 
-class MenuLine {
+class menu_line {
 	HBITMAP bmp1_, bmp2_, bmp3_;
 public:
-	MenuType type;
+	menu_type type;
 	std::string name;
-	Menu *menu;
+	menu *popup_menu;
 	unsigned int id;
 
 	struct {
@@ -24,31 +24,31 @@ public:
 		bool rightAlign;
 	} flags;
 	
-	MenuLine(Menu, std::string, bool = false, bool = false, bool = false);
-	MenuLine(MenuType, std::string = std::string(), unsigned int = 0, bool = false, bool = false, bool = false);
+	menu_line(menu, std::string, bool = false, bool = false, bool = false);
+	menu_line(menu_type, std::string = std::string(), unsigned int = 0, bool = false, bool = false, bool = false);
 	
-	MenuLine& SetIcon(int);
-	MenuLine& SetTwoIcons(int, int);
+	menu_line& SetIcon(int);
+	menu_line& SetTwoIcons(int, int);
 
-	friend class Menu;
+	friend class menu;
 };
 
-class Menu{
+class menu{
 	HMENU hmenu_;
 public:
-	Menu();
+	menu();
 
 	void destroy(void);
 	
-	Menu& pushLine(MenuLine);
-	Menu& insertLine(int, MenuLine);
-	Menu& deleteLine(int);
-	Menu& set(int, MenuLine);
-	MenuLine get(int);	
+	menu& pushLine(menu_line);
+	menu& insertLine(int, menu_line);
+	menu& deleteLine(int);
+	menu& set(int, menu_line);
+	menu_line get(int);	
 	int size(void);
 
-	friend class Window;
-	friend class MenuLine;
+	friend class window;
+	friend class menu_line;
 };
 
 }
