@@ -1,47 +1,19 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include "bufer.h"
+#include "bufer2.h"
 #include "color.h"
 
-#include "D:/CPP/agg/include/agg_scanline_u.h"
-#include "D:/CPP/agg/include/agg_rasterizer_scanline_aa.h"
-#include "D:/CPP/agg/include/agg_pixfmt_rgba.h"
-#include "D:/CPP/agg/include/agg_rendering_buffer.h"
-#include "D:/CPP/agg/include/agg_conv_stroke.h"
-#include "D:/CPP/agg/include/agg_renderer_scanline.h"
-#include "D:/CPP/agg/include/agg_ellipse.h"
-#include "D:/CPP/agg/include/agg_basics.h"
+vertex_src_poly_line::vertex_src_poly_line(int num1) : num(0), m_count(0), poly(true) { 
+	m_x = new double[num1+5];
+	m_y = new double[num1+5];
+	memset(m_x, 0, sizeof(double)*(num1+5));
+	memset(m_y, 0, sizeof(double)*(num1+5));
+}
 
-typedef agg::pixfmt_bgra32								pixfmt;
-typedef agg::renderer_base<pixfmt>						renderer_base;
-typedef agg::renderer_scanline_aa_solid<renderer_base>	renderer_scanline;
-typedef agg::rasterizer_scanline_aa<>					rasterizer_scanline;
-typedef agg::scanline_u8								scanline;
-typedef agg::rasterizer_sl_clip_int_3x					rass;
-typedef pixfmt::color_type								color_type;
-
-class vertex_src_poly_line {
-public:
-	vertex_src_poly_line();
-	void reset(void);
-	void add_point(double x, double y);
-	void rewind(unsigned);
-	void polygon(bool x);
-	unsigned vertex(double* x, double* y);
-
-private:
-	unsigned num;
-	unsigned m_count;
-	double   *m_x;
-	double   *m_y;
-	bool	 poly;
-};
-
-vertex_src_poly_line::vertex_src_poly_line() : num(0), m_count(0), poly(true) { 
-	m_x = new double[100];
-	m_y = new double[100];
-	memset(m_x, 0, sizeof(double)*100);
-	memset(m_y, 0, sizeof(double)*100);
+vertex_src_poly_line::~vertex_src_poly_line() {
+	delete[] m_x;
+	delete[] m_y;
 }
 
 void vertex_src_poly_line::reset(void) {

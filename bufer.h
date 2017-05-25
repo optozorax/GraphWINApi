@@ -85,8 +85,8 @@ public:
 	void draw_poly(std::vector<point2>);
 
 	/* Обращение к соответствующему пикселю для изменения или чтения. */
-	color& get_pixel(Point); // С проверкой выхода за границы
-	color& operator[](Point); // Без проверки выхода за границы
+	UINT32& get_pixel(Point); // С проверкой выхода за границы
+	UINT32& operator[](Point); // Без проверки выхода за границы
 private:
 	HDC		m_hdc;
 	HBITMAP	m_hbmp;
@@ -95,6 +95,7 @@ private:
 	brush	m_brush;
 	int		m_width;
 	int		m_height;
+	double	m_text_angle;
 };
 
 }

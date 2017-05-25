@@ -161,11 +161,11 @@ void mykeyboard(wgs::window &current) {
 
 int main() {
 	wgs::window current;
-	current.canvas.resize(Point(800, 800));
-	current.sizeSet(Point(800, 800));
+	current.canvas.resize(Point(500, 500));
+	current.sizeSet(Point(500, 500));
 
 	const int carLayers = 5;
-	const int carInCircle = 20;
+	const int carInCircle = 2;
 	const int carNum = carLayers*carInCircle;
 	std::vector<Car> cars(carNum);
 	for (int j = 0; j < carLayers; j++) {
@@ -255,7 +255,7 @@ int main() {
 		mykeyboard(current);
 		for (int i = 0; i < carNum; i++) {
 			cars[i].step(pd, wh, br, or);
-			cars[i].draw(current.canvas, point2(400, 400), 2.5);
+			cars[i].draw(current.canvas, point2(250, 250), 2.5);
 		}
 
 		pd = wh = br = or = 0;

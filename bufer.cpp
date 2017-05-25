@@ -206,6 +206,8 @@ void bufer::drawTo(bufer &a, int x, int y, int width, int height) {
 }
 
 void bufer::drawAlphaTo(bufer &a, int x, int y, int width, int height) {
+	if (width == 0) width = m_width;
+	if (height == 0) height = m_height;
 	boardsToCorrect(a.m_width, a.m_height, x, y, width, height);
 
 	/* Само рисование с прозрачностью. */
@@ -278,17 +280,20 @@ void bufer::textOut(Point x, std::string str, text_write_style stl) {
 Point wgs::bufer::textSize(std::string str) {
 	SIZE *sz = new SIZE;
 	std::string first;
-	Point x(0,0);
+	point2 x(0,0);
+	point2 sz1;
 
 	do {
 		first = str.substr(0, str.find("\n"));
 		GetTextExtentPoint32(m_hdc, first.c_str(), first.size(), sz);
-		x = Point(max(x.x, sz->cx), max(x.y, sz->cy));
+		sz1 = point2(sz->cx, sz->cy);
+		sz1.rotate(m_text_angle/180.0*M_PI);
+		x = point2(max(x.x, sz->cx), max(x.y, sz->cy));
 		str.erase(0, first.size()+1);
 	} while (str.size() != 0);
 	delete sz;
 
-	return x;
+	return Point(x);
 }
 
 void bufer::textStyle(StyleText stl) {
@@ -296,6 +301,7 @@ void bufer::textStyle(StyleText stl) {
 	font.lfHeight 			= -stl.size; /* Высота шрифта. */ 
 	font.lfWidth 			= 0; /* Ширина символов в шрифте. */
 	font.lfEscapement 		= stl.textSlope; /* Угол наклона относительно горизонта. */ 
+	m_text_angle			= stl.textSlope;
 	font.lfOrientation 		= stl.symbolSlope; /* Угол между основной линией каждого символа и осью X устройства. */ 
 	font.lfWeight 			= stl.thick*100; /* Толщина шрифта в диапазоне от 0 до 1000. */ 
 	font.lfItalic 			= stl.italic; /* Курсивный шрифт. */
@@ -350,11 +356,11 @@ void wgs::bufer::draw_poly(std::vector<Point> mas) {
 	delete mas1;
 }
 
-inline color& bufer::operator[](Point a) {
-	return (color) m_mas[a.x + m_width*a.y];
+inline UINT32& bufer::operator[](Point a) {
+	return m_mas[a.x + m_width*a.y];
 }
 
-color& bufer::get_pixel(Point a) {
+UINT32& bufer::get_pixel(Point a) {
 	if (inRectangle(a, Point(m_width,m_height),Point(0,0))) {
 		return operator[](a);
 	} else {

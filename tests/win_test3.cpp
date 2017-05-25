@@ -49,7 +49,7 @@ void drawText(wgs::window &a, double angle) {
 void drawDisk(wgs::window &a, double angle) {
 	a.canvas.brushSet(wgs::White);
 	a.canvas.penSet(wgs::Black);
-	a.canvas.draw_ellipse(cntr, radius + crclRadius + 5);
+	a.canvas.draw_ellipse(cntr, Point(radius + crclRadius + 5,radius + crclRadius + 5));
 	int i1 = 1;
 	Point b;
 	for (int i = 0; i < rectCount; i++) {
@@ -65,7 +65,7 @@ void drawDisk(wgs::window &a, double angle) {
 			if (i1 == 1) {
 				a.canvas.draw_rect(cntr+b - (d - Point(j,j)), cntr+b + (d - Point(j,j)));
 			} else {
-				a.canvas.draw_ellipse(cntr+b, crclRadius-j);
+				a.canvas.draw_ellipse(cntr+b, Point(crclRadius-j,crclRadius-j));
 			}
 		}
 	}
@@ -78,7 +78,7 @@ void drawConus(wgs::window &a, double angle) {
 		i1 *= -1;
 		beta = toRad(angle*cnsSpeed + i*cnsSpeed);
 		a.canvas.brushSet(wgs::rainbow((angle/50.0 + i/cnsNum)*2, true));
-		a.canvas.draw_ellipse(cntr + Point(sin(beta)*i, cos(beta)*i), cnsRadius - i*cnsStep);
+		a.canvas.draw_ellipse(cntr + Point(sin(beta)*i, cos(beta)*i), Point(cnsRadius - i*cnsStep, cnsRadius - i*cnsStep));
 	}
 }
 

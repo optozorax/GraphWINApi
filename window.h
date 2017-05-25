@@ -84,6 +84,7 @@ public:
 	friend DWORD WINAPI WindowLife::windowMainThread(LPVOID);
 	friend void WindowLife::createStyle(window_type&, DWORD&, DWORD&);
 	friend void WindowLife::taskbarRegister(window*, UINT, HWND);
+	friend LRESULT WindowLife::getMinMaxInfo(window*, HWND&, WPARAM&, LPARAM&);;
 };
 
 }

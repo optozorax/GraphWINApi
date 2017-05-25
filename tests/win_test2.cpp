@@ -8,7 +8,7 @@ void mymouse(wgs::window *This, int x, int y, wgs::WinEvents::MouseType click, i
 
 	switch (click) {
 	case wgs::WinEvents::L_DBL:
-		This->canvas.draw_line(Point(x-5, y+5), Point(x+5, y-5));
+		This->canvas.draw_line(point2(x-5, y+5), point2(x+5, y-5));
 		This->redraw();
 		break;
 	case wgs::WinEvents::R_DBL:
@@ -16,7 +16,7 @@ void mymouse(wgs::window *This, int x, int y, wgs::WinEvents::MouseType click, i
 		This->redraw();
 		break;
 	case wgs::WinEvents::L_DOWN:
-		This->canvas.draw_ellipse(Point(x, y), 10);
+		This->canvas.draw_ellipse(point2(x, y), point2(10,10));
 		This->redraw();
 		break;
 	case wgs::WinEvents::R_DOWN:
@@ -24,7 +24,7 @@ void mymouse(wgs::window *This, int x, int y, wgs::WinEvents::MouseType click, i
 		This->redraw();
 		break;
 	case wgs::WinEvents::M_DOWN:
-		This->canvas.draw_rect(Point(x-10, y-10), Point(x+10, y+10));
+		This->canvas.draw_rect(point2(x-10, y-10), point2(x+10, y+10));
 		This->redraw();
 		break;
 	case wgs::WinEvents::M_UP:
@@ -38,14 +38,15 @@ void mymouse(wgs::window *This, int x, int y, wgs::WinEvents::MouseType click, i
 		break;
 	case wgs::WinEvents::Wheel:
 		rnb += wheel/120;
-		This->canvas.brushSet(wgs::rainbow(rnb/20.0, true));
+		//This->canvas.brushSet(wgs::rainbow(rnb/20.0, true));
+		This->canvas.penSet(wgs::rainbow(rnb/20.0, true));
 		break;
 	case wgs::WinEvents::Move:
-		static Point b;
-		if (b != Point(0,0)) {
-			This->canvas.draw_line(b, Point(x, y));
+		static point2 b;
+		if (b != point2(0,0)) {
+			This->canvas.draw_line(b, point2(x, y));
 		}
-		b = Point(x, y);
+		b = point2(x, y);
 		break;
 	}
 }
